@@ -9,6 +9,7 @@ import shutil
 import pathlib
 from urllib import parse, request
 from PIL import Image
+import piexif
 import json
 
 from pprint import pprint
@@ -24,6 +25,32 @@ def fingerprintFromURL(fotourl):
   else:
     raise("Invalid image URL")
 
+def exifFromFeature(feature):
+  def deg_to_dms(deg):
+    d = int(deg)
+    m = int((deg - d) * 60)
+    s = int(((deg - d) * 60 - m) * 60000)
+    return ((d, 1), (m, 1), (s, 1000))
+
+  exif_dict = {"GPS": {}, 'Exif': {}, '0th': {} }
+
+  if feature['properties']['ulsp_type'] == 'POI':
+    timestamp = feature['properties']['Data']+" "+feature['properties']['Ora']
+    altitudine = feature['properties']['Altitudine']
+    (longitudine,latitudine) = feature['geometry']['coordinates']
+    exif_dict['GPS'][piexif.GPSIFD.GPSAltitude] = (altitudine, 1)
+    exif_dict['GPS'][piexif.GPSIFD.GPSLatitudeRef] = 'N'
+    exif_dict['GPS'][piexif.GPSIFD.GPSLatitude] = deg_to_dms(latitudine)
+    exif_dict['GPS'][piexif.GPSIFD.GPSLongitudeRef] = 'E'
+    exif_dict['GPS'][piexif.GPSIFD.GPSLongitude] = deg_to_dms(longitudine)
+    exif_dict['0th'][piexif.ImageIFD.DateTime] = timestamp
+    exif_dict['0th'][piexif.ImageIFD.ImageDescription] = feature['properties']['Titolo']
+    exif_dict['Exif'][piexif.ExifIFD.DateTimeOriginal] = timestamp
+    exif_dict['Exif'][piexif.ExifIFD.DateTimeDigitized] = timestamp
+    
+  return exif_dict
+  
+
 # geojson content
 with open(sys.argv[1]) as json_data:
   geojson = json.load(json_data)
@@ -35,22 +62,30 @@ l = list(map(
           ( f['properties']['Titolo'].translate(dict.fromkeys(map(ord, '\\/'), "-")),
             f['properties']['Foto'],
             f['properties']['ulsp_type'],
-            fingerprintFromURL(f['properties']['Foto'])
+            fingerprintFromURL(f['properties']['Foto']),
+            exifFromFeature(f)
           ) if 'Foto' in f['properties']
           else 
           ( f['properties']['Titolo'].translate(dict.fromkeys(map(ord, '\\/'), "-")),
             f['properties']['Foto accesso'],
             f['properties']['ulsp_type'],
-            fingerprintFromURL(f['properties']['Foto accesso'])
+            fingerprintFromURL(f['properties']['Foto accesso']),
+            exifFromFeature(f)
           ) if 'Foto accesso' in f['properties']
-          else (f['properties']['Titolo'].translate(dict.fromkeys(map(ord, '\\/'), "-")),"",f['properties']['ulsp_type'],""), 
+          else 
+          ( f['properties']['Titolo'].translate(dict.fromkeys(map(ord, '\\/'), "-")),
+            "",
+            f['properties']['ulsp_type'],
+            "" , 
+            {}), 
           geojson['features']))
           
 missing = list(filter(lambda x: x[1] == "", l) )
 
 l = list(filter(lambda x: x not in missing, l) )
 
-present = list(filter(lambda x: x[0] + "-" + x[3] + ".jpg" in os.listdir(wd), l))
+#present = list(filter(lambda x: x[0] + "-" + x[3] + ".jpg" in os.listdir(wd), l))
+present = ()
 
 l = list(filter(lambda x: x not in present, l) )
 
@@ -64,12 +99,12 @@ print("Immagini da scaricare:")
 pprint(list(map(lambda x: x[0]+"-"+x[3], l)))
 
 print("====")
-# Produce coppie URL, filename destinazione
-dl = list(map(lambda x: (x[1], os.path.join(wd, x[0]+"-"+x[3]+".jpg")), l))
+# Produce 3-ple URL, filename destinazione, exif
+dl = list(map(lambda x: (x[1], os.path.join(wd, x[0]+"-"+x[3]+".jpg"),x[4]), l))
 
 for download in dl:
   print(download[1])
   with request.urlopen(download[0]) as response:
     image=Image.open(io.BytesIO(response.read()))
-    image.save(download[1])
+    image.save(download[1], exif=piexif.dump(download[2]) )
 
