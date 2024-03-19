@@ -34,6 +34,29 @@ def warnprint(s):
   print('\x1b[1;30;43m' + s + '\x1b[0m')
 #grab_image(image_url,"image.jpg")
 
+def cleanup():
+  # Esce dal workspace
+  os.chdir('..')
+  shutil.rmtree(config['masterName'], ignore_errors=True)
+  
+def vignetteNameFromURL(url):
+  if ( url.netloc == 'i.postimg.cc' ):
+    key = url.path.split('/')[1]
+    return "/vignettes/" + key + ".jpg"
+  elif ( url.netloc == 'www.gaiagps.com' ):
+    key = url.path.split('/')[4]
+    return "/vignettes/" + key + ".jpg"
+  elif ( url.netloc == 'underlandscape.cfs.unipi.it' ):
+    key = url.path.split('/')[6]
+    return "/vignettes/" + key + ".jpg"
+  else:
+    if ( url.netloc != "" ):
+      failprint("   La URL dell'immagine per " + feature["properties"]["Titolo"]  + " (" + feature["properties"]["ulsp_type"] +") non è valida")
+      return
+    else:
+      warnprint("   La feature non contiene la URL dell'immagine per " + feature["properties"]["Titolo"]  + " (" + feature["properties"]["ulsp_type"] +")")
+      return
+
 # Funziona
 def create_user(token):
   with Github(token) as g:
@@ -67,8 +90,14 @@ def pull():
   else:
     failprint("Pull fallita")
     exit()
-    
-# Funziona
+
+###
+# Esamina commit sino a trovarne uno che contiene il file .lastsync
+# e inserisce nell'insieme result i nomi dei file modificati dai
+# commit.
+# Restituisce l'insieme (senza ripetizioni) dei file modificati
+# dall'ultima sincronizzazione    
+###
 def diffFiles():
   result = []
   master = pygit2.Repository('.')
@@ -106,27 +135,26 @@ def commitMaster():
     emphprint('Nothing to commit on summary repository')
     
 def push_repo(r):
-  if list(map(lambda r: r.delta.new_file.path, r.diff("HEAD"))):
-    # Build index and tree
-    r.index.add_all()
-    r.index.write()
-    tree = r.index.write_tree()
-    # Commit
-    author = pygit2.Signature("Augusto Ciuffoletti", "augusto.ciuffoletti@gmail.com")
-    message = input("Digita il messaggio di commit per il dataset: ")
-    r.create_commit('HEAD', author, author, message,tree,[r.head.target])
-    # Push
-    # Build credentials
-    credentials = pygit2.UserPass(config["username"], config["access_token"])
-    # Push on "origin" remote with user credentials
-    remote = r.remotes["origin"]
-    remote.credentials = credentials
-    callbacks=pygit2.RemoteCallbacks(credentials=credentials)
-    remote.push(['refs/heads/main'],callbacks=callbacks)
-    # Remove repository directory
-#    shutil.rmtree(reponame, ignore_errors=True)
-  else:
-    emphprint('   Non è necessario aggiornare questo dataset')
+# if list(map(lambda r: r.delta.new_file.path, r.diff("HEAD"))):
+  # Build index and tree
+  r.index.add_all()
+  r.index.write()
+  tree = r.index.write_tree()
+  print("Passa")
+  # Commit
+  author = pygit2.Signature("Augusto Ciuffoletti", "augusto.ciuffoletti@gmail.com")
+  message = input("Digita il messaggio di commit per il dataset: ")
+  r.create_commit('HEAD', author, author, message,tree,[r.head.target])
+  # Push
+  # Build credentials
+  credentials = pygit2.UserPass(config["username"], config["access_token"])
+  # Push on "origin" remote with user credentials
+  remote = r.remotes["origin"]
+  remote.credentials = credentials
+  callbacks=pygit2.RemoteCallbacks(credentials=credentials)
+  remote.push(['refs/heads/main'],callbacks=callbacks)
+#  else:
+#    emphprint('   Non è necessario aggiornare questo dataset')
 
 # Vero se il file f è nel sidecar del repository r
 def in_sidecar(f,r):
@@ -152,27 +180,20 @@ def sync_images():
         url = urlparse(feature["properties"]["Foto accesso"])
       else:
         url = urlparse(feature["properties"]["Foto"])
-      if ( url.netloc == 'i.postimg.cc' ):
-        key = url.path.split('/')[1]
-        photo_filename = rn + "/vignettes/" + key + ".jpg"
-        if ( os.path.exists(photo_filename) ):
-          print("   "+feature["properties"]["Titolo"] + " (" + feature["properties"]["ulsp_type"] +")" + ": immagine già presente");
-        else:
-          print("   Scarico l'immagine di " + feature["properties"]["Titolo"])
-          grab_image(feature["properties"]["Foto"],photo_filename)
+      photo_filename = rn + vignetteNameFromURL(url)
+      if ( os.path.exists(photo_filename) ):
+        print("   "+feature["properties"]["Titolo"] + " (" + feature["properties"]["ulsp_type"] +")" + ": immagine già presente");
       else:
-        if ( url.netloc != "" ):
-          failprint("   Invalid photo URL (not from postimages) for " + feature["properties"]["Titolo"]  + " (" + feature["properties"]["ulsp_type"] +")")
-        else:
-          warnprint("   La feature non contiene la URL dell'immagine per " + feature["properties"]["Titolo"]  + " (" + feature["properties"]["ulsp_type"] +")") 
+        print("   Scarico l'immagine di " + feature["properties"]["Titolo"])
+        grab_image(feature["properties"]["Foto"],photo_filename)
     except KeyError:
       try:
         failprint("   No vignette URL for " + feature["properties"]["Titolo"] + " (" + feature["properties"]["ulsp_type"] +")")
       except KeyError as ke:
         failprint("   Feature mal formattata: non trattata ("+ke.args[0]+")")
         continue
-    except:
-      failprint("   Feature mal formattata: non trattata ("+ke.args[0]+")")
+    except Exception as e:
+      failprint("   Feature mal formattata: non trattata ("+e+")")
       continue
 
 ####
@@ -305,19 +326,36 @@ def generate_readme():
         f.write("## " + feature["properties"]["ulsp_type"] + ": " + feature["properties"]["Titolo"] + "\n")
     # if qrtag display the tag
         if ( ulsp_type == "QRtag" ):
-          fid = feature["properties"]["fid"]
-          f.write("[<img src='qrtags/"+fid+".png' width='150'/>](qrtags/"+fid+".png) ")
+          try:
+            fid = feature["properties"]["fid"]
+            f.write("[<img src='qrtags/"+fid+".png' width='150'/>](qrtags/"+fid+".png) ")
+          except KeyError:
+            warnprint("   Non è disponibile l'immagine per il QRtag " + feature["properties"]["Titolo"])
+            raise KeyError
     # select attribute with vignette URL
-        if ( ulsp_type == "Percorso" ):
-          fotourl = urlparse(feature["properties"]["Foto accesso"])
         else:
-          fotourl = urlparse(feature["properties"]["Foto"])
-        try:
-          vignette = fotourl.path.split('/')[1]
-          f.write("[<img src='vignettes/"+vignette+".jpg' width='250'/>](vignettes/"+vignette+".jpg) \n\n")
-        except IndexError:
-          warnprint("   Non è disponibile l'immagine per "+ feature["properties"]["ulsp_type"] + " " + feature["properties"]["Titolo"])
-          f.write("*Nessuna immagine* \n\n")
+          if ( ulsp_type == "Percorso" ):
+            try: 
+              fotourl = urlparse(feature["properties"]["Foto accesso"])
+            except KeyError:
+              warnprint("   Non è disponibile l'immagine per il percorso " + feature["properties"]["Titolo"])
+              f.write("*Non è disponibile l'immagine dell'accesso al percorso* \n\n")
+              continue
+          else:
+            try:
+              fotourl = urlparse(feature["properties"]["Foto"])
+            except KeyError:
+              warnprint("   Non è disponibile l'immagine per la feature " + feature["properties"]["Titolo"])
+              f.write("*Non è disponibile l'immagine relativa alla feature* \n\n")
+              continue
+          try:
+            vignette = vignetteNameFromURL(fotourl)
+            f.write("[<img src='"+vignette+"' width='250'/>]("+vignette+") \n\n")
+          except IndexError:
+            warnprint("   Non è disponibile l'immagine per "+ feature["properties"]["ulsp_type"] + " " + feature["properties"]["Titolo"])
+            f.write("*Nessuna immagine* \n\n")
+          except UnboundLocalError:
+            pass
         f.write("**"+feature["properties"]["Descrizione"]+"**"+"\n")
   except KeyError as ke:
     failprint("   GeoJSON mal formattato: non trattato ("+ke.args[0]+")")
@@ -325,7 +363,7 @@ def generate_readme():
         
 
 # Read configuration and assets
-with open("ulsp_repo.config") as json_data:
+with open("dataset-sync.config") as json_data:
   config = json.load(json_data)
 with open("umapTemplate.json") as json_data:
   umapTemplate = json.load(json_data)
@@ -340,17 +378,17 @@ index = indexList()
 emphprint("File nell'indice github del repository master")
 print(index)
 
-diffrepos = set(                                                    # elimina duplicati
-              map(lambda fn: fn.split('.')[0],                 # seleziona quello che precede il primo . (file nel sidecar)
-              filter(lambda fn: fn in os.listdir("."),diffFiles())) # rimuove file rimossi da quelli modificati (ANDREBBERO RIMOSSI ANCHE I REPO)
+diffrepos = set(                                          # elimina duplicati
+              map(lambda fn: fn.split('.')[0],            # seleziona quello che precede il primo . (file nel sidecar)
+              filter(lambda fn: fn in os.listdir("."),diffFiles())) # seleziona solo i file ancora presenti nella directory
             )
-emphprint("Dataset da aggiornare o creare")
+emphprint("Dataset da aggiornare")
 if diffrepos: print(diffrepos)
 else: print("nessuno")
 
 to_remove = set(
               map(lambda fn: fn.split('.')[0],                 # seleziona quello che precede il primo . (file nel sidecar)
-              filter(lambda fn: fn not in os.listdir("."),diffFiles()))
+              filter(lambda fn: fn not in os.listdir("."),diffFiles())) # seleziona i file non più nella directory (rimossi)
             )
 emphprint("Dataset da rimuovere")
 if to_remove: print(to_remove)
@@ -368,15 +406,16 @@ print(remote_repos)
 # Get list of repositories with no remote
 missing_repos=set(                                                    # elimina duplicati
                 filter(lambda r: r not in remote_repos,               # filtra quelli che non hanno repo su GitHub
-                map(lambda fn: os.path.splitext(fn)[0],index))        # elimina l'estensione dei file indice
+                map(lambda fn: os.path.splitext(fn)[0],diffFiles()))  # elimina l'estensione dei file indice
               )
 emphprint("Dataset da creare")
 if missing_repos: print(missing_repos)
 else: print("nessuno")
 
 # Exit if no parameters
-if not diffrepos.union(to_remove):
+if not diffrepos.union(to_remove).union(missing_repos):
   emphprint("Nessun aggiornamento necessario")
+  cleanup()
   exit()
 else:
   # Ask confirm
@@ -387,7 +426,9 @@ else:
     elif r in to_remove: print(" (da rimuovere)")
     else: print(" (da aggiornare)")
   l=input("Premi a capo per continuare, CTRL-C per interrompere: -> ")
-  if l != "": exit()
+  if l != "":
+    cleanup()
+    exit()
   
 ###
 # Creazione dei repository relativi a nuovi geojson
@@ -449,19 +490,35 @@ else:
     generate_readme() # crea i tag delle feature con ulsp_type qrtag
     push_repo(r)
     shutil.rmtree(rn, ignore_errors=True)
-    
+
+####
+# Debug:
+# -) togliere il commento dalla riga che segue
+# -) clonare o fare push dell'archivio master in una directory
+#    diversa da questa (IMPORTANTE)
+# -) effettuare una modifica in un file nell'archivio master così creato
+#   (quale dipende dal problema riscontrato)
+# -) fare commit nell'archivio master
+# -) fare push nell'archivio master
+# -) richiamare questa funzione, se necessario rimuovendo prima
+#    il clone del repository master che viene creato in questa 
+#    directory
+# In questo modo l'esecuzione di questo programma può essere ripetuta
+# senza dover ogni volta effettuare una modifica. Al termine della
+# sessione di debug disabilitare la riga seguente e ripetere il comando
+####
+# exit() # debug only
 
 # Registra il timestamp
 print("Registro il timestamp")
 with open(".lastsync", mode='a') as f:
-    f.write(f'{datetime.datetime.utcnow():%Y-%m-%d %H:%M:%S UTC}')
+    f.write(f'{datetime.datetime.utcnow():%Y-%m-%d %H:%M:%S UTC}\n')
 
 # Aggiorno il repository Master su github
 push_repo(pygit2.Repository('.'))
 
-# Esce dal workspace
-os.chdir('..')
-#shutil.rmtree(config['masterName'])
+cleanup()
+
 
 
 
