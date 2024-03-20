@@ -11,6 +11,9 @@ from urllib import parse, request
 from PIL import Image
 import piexif
 import json
+import datetime
+import tzlocal
+import iso8601
 
 from pprint import pprint
 
@@ -35,7 +38,11 @@ def exifFromFeature(feature):
   exif_dict = {"GPS": {}, 'Exif': {}, '0th': {} }
 
   if feature['properties']['ulsp_type'] == 'POI':
-    timestamp = feature['properties']['Data']+" "+feature['properties']['Ora']
+#aware_dt = iso8601.parse_date("2010-10-30T17:21:12Z") # some aware datetime object
+    timestamp_utc = iso8601.parse_date(feature['properties']['Data']+" "+feature['properties']['Ora'])
+    local_timezone = tzlocal.get_localzone()
+    timestamp = str(timestamp_utc.astimezone(local_timezone).replace(tzinfo=None))
+    print(timestamp)
     altitudine = feature['properties']['Altitudine']
     (longitudine,latitudine) = feature['geometry']['coordinates']
     exif_dict['GPS'][piexif.GPSIFD.GPSAltitude] = (altitudine, 1)
@@ -47,6 +54,7 @@ def exifFromFeature(feature):
     exif_dict['0th'][piexif.ImageIFD.ImageDescription] = feature['properties']['Titolo']
     exif_dict['Exif'][piexif.ExifIFD.DateTimeOriginal] = timestamp
     exif_dict['Exif'][piexif.ExifIFD.DateTimeDigitized] = timestamp
+    print(exif_dict)
     
   return exif_dict
   
@@ -84,8 +92,8 @@ missing = list(filter(lambda x: x[1] == "", l) )
 
 l = list(filter(lambda x: x not in missing, l) )
 
-#present = list(filter(lambda x: x[0] + "-" + x[3] + ".jpg" in os.listdir(wd), l))
-present = ()
+present = list(filter(lambda x: x[0] + "-" + x[3] + ".jpg" in os.listdir(wd), l))
+#present = () # Forza scaricamento anche di quelle già presenti
 
 l = list(filter(lambda x: x not in present, l) )
 

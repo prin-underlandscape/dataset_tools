@@ -51,11 +51,9 @@ def vignetteNameFromURL(url):
     return "/vignettes/" + key + ".jpg"
   else:
     if ( url.netloc != "" ):
-      failprint("   La URL dell'immagine per " + feature["properties"]["Titolo"]  + " (" + feature["properties"]["ulsp_type"] +") non è valida")
-      return
+      raise("Invalid image URL")
     else:
-      warnprint("   La feature non contiene la URL dell'immagine per " + feature["properties"]["Titolo"]  + " (" + feature["properties"]["ulsp_type"] +")")
-      return
+      raise("No image URL")
 
 # Funziona
 def create_user(token):
@@ -140,7 +138,6 @@ def push_repo(r):
   r.index.add_all()
   r.index.write()
   tree = r.index.write_tree()
-  print("Passa")
   # Commit
   author = pygit2.Signature("Augusto Ciuffoletti", "augusto.ciuffoletti@gmail.com")
   message = input("Digita il messaggio di commit per il dataset: ")
@@ -180,12 +177,15 @@ def sync_images():
         url = urlparse(feature["properties"]["Foto accesso"])
       else:
         url = urlparse(feature["properties"]["Foto"])
-      photo_filename = rn + vignetteNameFromURL(url)
-      if ( os.path.exists(photo_filename) ):
-        print("   "+feature["properties"]["Titolo"] + " (" + feature["properties"]["ulsp_type"] +")" + ": immagine già presente");
-      else:
-        print("   Scarico l'immagine di " + feature["properties"]["Titolo"])
-        grab_image(feature["properties"]["Foto"],photo_filename)
+      try:
+        photo_filename = rn + vignetteNameFromURL(url)
+        if ( os.path.exists(photo_filename) ):
+          print("   "+feature["properties"]["Titolo"] + " (" + feature["properties"]["ulsp_type"] +")" + ": immagine già presente");
+        else:
+          print("   Scarico l'immagine di " + feature["properties"]["Titolo"])
+          grab_image(feature["properties"]["Foto"],photo_filename)
+      except:
+        warnprint('Attributo Foto vuoto o errato')
     except KeyError:
       try:
         failprint("   No vignette URL for " + feature["properties"]["Titolo"] + " (" + feature["properties"]["ulsp_type"] +")")
