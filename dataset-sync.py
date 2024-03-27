@@ -51,9 +51,9 @@ def vignetteNameFromURL(url):
     return "/vignettes/" + key + ".jpg"
   else:
     if ( url.netloc != "" ):
-      raise("Invalid image URL")
+      raise ValueError("Invalid image URL")
     else:
-      raise("No image URL")
+      raise ValueError("No image URL")
 
 # Funziona
 def create_user(token):
@@ -354,6 +354,8 @@ def generate_readme():
           except IndexError:
             warnprint("   Non è disponibile l'immagine per "+ feature["properties"]["ulsp_type"] + " " + feature["properties"]["Titolo"])
             f.write("*Nessuna immagine* \n\n")
+          except ValueError as e:
+            warnprint(str(e))
           except UnboundLocalError:
             pass
         f.write("**"+feature["properties"]["Descrizione"]+"**"+"\n")
