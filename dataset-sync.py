@@ -19,6 +19,13 @@ import pygit2
 
 from pprint import pprint
 
+import sys 
+sys.path.append('./libs')
+import my_git
+from colprint import emphprint, failprint, warnprint
+from summary import generate_summary
+from upload_list import UploadList;
+
 def grab_image(url,filename):
   with urllib.request.urlopen(url) as response:
     image=Image.open(io.BytesIO(response.read()))
@@ -47,7 +54,7 @@ def vignetteNameFromURL(url):
     key = url.path.split('/')[4]
     return "/vignettes/" + key + ".jpg"
   elif ( url.netloc == 'underlandscape.cfs.unipi.it' ):
-    key = url.path.split('/')[6]
+    key = url.path.split('/')[4][:8]
     return "/vignettes/" + key + ".jpg"
   else:
     if ( url.netloc != "" ):
@@ -185,15 +192,15 @@ def sync_images():
           print("   Scarico l'immagine di " + feature["properties"]["Titolo"])
           grab_image(feature["properties"]["Foto"],photo_filename)
       except:
-        warnprint('Attributo Foto vuoto o errato')
+        warnprint(feature["properties"]["Titolo"] + ' - Attributo Foto vuoto o errato')
     except KeyError:
       try:
-        failprint("   No vignette URL for " + feature["properties"]["Titolo"] + " (" + feature["properties"]["ulsp_type"] +")")
+        failprint("    No vignette URL for " + feature["properties"]["Titolo"] + " (" + feature["properties"]["ulsp_type"] +")")
       except KeyError as ke:
-        failprint("   Feature mal formattata: non trattata ("+ke.args[0]+")")
+        failprint("   " + feature["properties"]["Titolo"] + "- Feature mal formattata: non trattata ("+ke.args[0]+")")
         continue
     except Exception as e:
-      failprint("   Feature mal formattata: non trattata ("+e+")")
+      failprint("   " + feature["properties"]["Titolo"] + "- Feature mal formattata: non trattata ("+e+")")
       continue
 
 ####
@@ -213,16 +220,16 @@ def generate_umap():
             failprint("Wrong ulsp format")
           layers[0]["features"].append(feature);
       # Setup map center
-          if feature["properties"]["ulsp_type"] == "POI":
-            if "coordinates" not in umap:
+          if feature['properties']['ulsp_type'] in ['POI','Sito','QRtag']:
+            if 'coordinates' not in umap:
               umap["geometry"] = {
                 "type": "Point",
                 "coordinates": feature["geometry"]["coordinates"]
               }
-          elif feature["properties"]["ulsp_type"] == "Sito":       
+          elif feature["properties"]["ulsp_type"] == "Percorso":       
             umap["geometry"] = {
               "type": "Point",
-              "coordinates": feature["geometry"]["coordinates"]
+              "coordinates": feature["geometry"]["coordinates"][0]
             }
           else:
             umap["geometry"] = {
@@ -329,9 +336,19 @@ def generate_readme():
           try:
             fid = feature["properties"]["fid"]
             f.write("[<img src='qrtags/"+fid+".png' width='150'/>](qrtags/"+fid+".png) ")
+            fotourl = urlparse(feature["properties"]["Foto"])
+            vignette = vignetteNameFromURL(fotourl)
+            f.write("[<img src='"+vignette+"' width='250'/>]("+vignette+") \n\n")
           except KeyError:
             warnprint("   Non è disponibile l'immagine per il QRtag " + feature["properties"]["Titolo"])
             raise KeyError
+          except IndexError:
+            warnprint("   Non è disponibile l'immagine per il QRtag "+ feature["properties"]["ulsp_type"] + " " + feature["properties"]["Titolo"])
+            f.write("*Nessuna immagine* \n\n")
+          except ValueError as e:
+            warnprint(str(e))
+          except UnboundLocalError:
+            pass
     # select attribute with vignette URL
         else:
           if ( ulsp_type == "Percorso" ):
@@ -377,6 +394,7 @@ clone(config['masterName'])
 os.chdir(config['masterName'])
 
 index = indexList()
+
 emphprint("File nell'indice github del repository master")
 print(index)
 
@@ -417,6 +435,11 @@ else: print("nessuno")
 # Exit if no parameters
 if not diffrepos.union(to_remove).union(missing_repos):
   emphprint("Nessun aggiornamento necessario")
+#### Solo debug summary ##############################################
+#  ul = UploadList()
+#  generate_summary(ul)    # genera l'umap di sommario
+#  ul.show()
+#### FINE debug ######################################################
   cleanup()
   exit()
 else:
@@ -457,7 +480,8 @@ else:
 
 ###
 # Ricalcolo e aggiornamento dei repository modificati
-###   
+###
+  ul = UploadList()
   for rn in diffrepos:
     ####
     # Ricalcolo e aggiornamento di un singolo dataset
@@ -490,13 +514,19 @@ else:
     generate_umap()   # crea il file umap
     generate_qrtags() # crea i tag delle feature con ulsp_type qrtag
     generate_readme() # crea i tag delle feature con ulsp_type qrtag
+    ul.log(rn+".umap",geojson['properties']['umapKey'])
+    
     push_repo(r)
     shutil.rmtree(rn, ignore_errors=True)
+
+generate_summary(ul)    # genera l'umap di sommario
+
+ul.show()               # Visualizza l'elenco dei file da caricare nelle rispettive mappe umap
 
 ####
 # Debug:
 # -) togliere il commento dalla riga che segue
-# -) clonare o fare push dell'archivio master in una directory
+# -) clonare o fare pull dell'archivio master in una directory
 #    diversa da questa (IMPORTANTE)
 # -) effettuare una modifica in un file nell'archivio master così creato
 #   (quale dipende dal problema riscontrato)
@@ -509,7 +539,7 @@ else:
 # senza dover ogni volta effettuare una modifica. Al termine della
 # sessione di debug disabilitare la riga seguente e ripetere il comando
 ####
-# exit() # debug only
+exit() # debug only
 
 # Registra il timestamp
 print("Registro il timestamp")
