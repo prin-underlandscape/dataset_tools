@@ -514,7 +514,7 @@ else:
     generate_umap()   # crea il file umap
     generate_qrtags() # crea i tag delle feature con ulsp_type qrtag
     generate_readme() # crea i tag delle feature con ulsp_type qrtag
-    ul.log(rn+".umap",geojson['properties']['umapKey'])
+    #ul.log(rn+".umap",geojson['properties']['umapKey'])
     
     push_repo(r)
     shutil.rmtree(rn, ignore_errors=True)
