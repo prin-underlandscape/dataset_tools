@@ -420,8 +420,8 @@ user = create_user(config["access_token"])
 
 # Get list of repositories on github
 remote_repos = list(map(lambda s: s.name, user.get_repos()))
-emphprint("Repositories sull'account github (compresi i dataset)")
-print(remote_repos)
+emphprint("Dataset sull'account github (compresi i dataset)")
+print(list(filter(lambda r: r.startswith(("ULS","QRT","Fase1","ITN")), remote_repos)))
 
 # Get list of repositories with no remote
 missing_repos=set(                                                    # elimina duplicati
@@ -539,7 +539,7 @@ ul.show()               # Visualizza l'elenco dei file da caricare nelle rispett
 # senza dover ogni volta effettuare una modifica. Al termine della
 # sessione di debug disabilitare la riga seguente e ripetere il comando
 ####
-exit() # debug only
+# exit() # debug only
 
 # Registra il timestamp
 print("Registro il timestamp")
