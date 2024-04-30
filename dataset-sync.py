@@ -208,8 +208,9 @@ def sync_images():
 ####
 def generate_umap():
   try:
+    with open("../umapTemplate.json") as json_data:
+      umap = json.load(json_data)
     print("\u2022 Generazione del file umap")
-    umap = umapTemplate
     allowed_types = list(map(lambda l: l["_umap_options"]["name"], umap["layers"]))
     for feature in geojson["features"]:
       try:
@@ -384,8 +385,6 @@ def generate_readme():
 # Read configuration and assets
 with open("dataset-sync.config") as json_data:
   config = json.load(json_data)
-with open("umapTemplate.json") as json_data:
-  umapTemplate = json.load(json_data)
   
 logo = Image.open("logoEle_v2.2_small.png").convert("RGBA")
 
