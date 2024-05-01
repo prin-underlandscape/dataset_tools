@@ -328,7 +328,18 @@ def generate_readme():
   print("\u2022 Genero il readme per il dataset QRtags")
   try:
     with open(rn+"/README.md", 'w', encoding='utf-8') as f:
-      f.write("# " + rn + "\n")
+      f.write("# " + rn + " (")
+      try:
+        if geojson["properties"]["umapKey"] == "": raise KeyError("Link alla mappa non definito")
+        f.write("[mappa](" + geojson["properties"]["umapKey"]+")")
+      except:
+        f.write("mappa non collegata")
+      f.write(")\n")
+      try:
+        if geojson["properties"]["Descrizione"] == "": raise KeyError("Descrizione vuota")
+        f.write(geojson["properties"]["Descrizione"] + "\n")
+      except:
+        f.write("descrizione del dataset mancante\n")
       for feature in geojson["features"]:
         ulsp_type = feature["properties"]["ulsp_type"]
         f.write("## " + feature["properties"]["ulsp_type"] + ": " + feature["properties"]["Titolo"] + "\n")
