@@ -67,8 +67,8 @@
                 "iconClass": "Ball",
                 "popupShape": "Panel",
                 "popupTemplate": "Table",
-                "popupContentTemplate": "# {Titolo} \n{{{Foto}|300}} \n##   ( [[https://sites.google.com/view/prin-underlandscape/home-page/attivit%C3%A0-sul-campo/{Link}|link]]) \n{Descrizione} \n**Altitudine** (m): {Altitudine} \n--- \nScattata il {Data} alle {Ora} \ncon {Strumento} \nda {Autore}"
-           }
+                "popupContentTemplate": "# {Titolo} ({Tag primario})\n{{{Foto}|300}} \n##   ( [[https://sites.google.com/view/prin-underlandscape/home-page/attivit%C3%A0-sul-campo/{Link}|link]]) \n{Descrizione} \n**Tag primario**: {Tag primario}\n**Altri tag**: {Altri tag}\n**Altitudine** (m): {Altitudine} \n--- \nScattata il {Data} alle {Ora} \ncon {Strumento} \nda {Autore}"
+            }
         },
         {
             "type": "FeatureCollection",

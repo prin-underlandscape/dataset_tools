@@ -25,6 +25,7 @@ import my_git
 from colprint import emphprint, failprint, warnprint
 from summary import generate_summary
 from upload_list import UploadList;
+from umap_generation import generate_umap
 
 def grab_image(url,filename):
   with urllib.request.urlopen(url) as response:
@@ -202,54 +203,6 @@ def sync_images():
     except Exception as e:
       failprint("   " + feature["properties"]["Titolo"] + "- Feature mal formattata: non trattata ("+e+")")
       continue
-
-####
-# Crea i file umap
-####
-def generate_umap():
-  try:
-    with open("../umapTemplate.json") as json_data:
-      umap = json.load(json_data)
-    print("\u2022 Generazione del file umap")
-    allowed_types = list(map(lambda l: l["_umap_options"]["name"], umap["layers"]))
-    for feature in geojson["features"]:
-      try:
-        if feature["properties"]["ulsp_type"] in allowed_types:
-          feature["properties"]["_umap_options"] = {"popupTemplate": "Default"};
-          layers = list(filter(lambda l: l["_umap_options"]["name"] == feature["properties"]["ulsp_type"], umap["layers"]))
-          if len(layers) != 1:
-            failprint("Wrong ulsp format")
-          layers[0]["features"].append(feature);
-      # Setup map center
-          if feature['properties']['ulsp_type'] in ['POI','Sito','QRtag']:
-            if 'coordinates' not in umap:
-              umap["geometry"] = {
-                "type": "Point",
-                "coordinates": feature["geometry"]["coordinates"]
-              }
-          elif feature["properties"]["ulsp_type"] == "Percorso":       
-            umap["geometry"] = {
-              "type": "Point",
-              "coordinates": feature["geometry"]["coordinates"][0]
-            }
-          else:
-            umap["geometry"] = {
-              "type": "Point",
-              "coordinates": [10.1, 44.14]
-            }
-      # Setup map name
-          umap["properties"]["name"] = rn
-        else:
-          raise KeyError("Wrong ulsp_type")
-        with open(rn+"/"+rn+".umap", 'w', encoding='utf-8') as f:
-          json.dump(umap, f, ensure_ascii=False, indent=2)
-      except KeyError as ke:
-        failprint("   Feature mal formattata: non trattata ("+ke.args[0]+")")
-        continue
-  except KeyError as ke:
-    failprint("   GeoJSON mal formattato: non trattato ("+ke.args[0]+")")
-    return False
-
 
 ####
 # Generazione dei QRtag (segnalazione)
@@ -521,7 +474,7 @@ else:
       geojson = json.load(json_data)
     
     sync_images()     # aggiorna le foto
-    generate_umap()   # crea il file umap
+    generate_umap(geojson, rn)   # crea il file umap
     generate_qrtags() # crea i tag delle feature con ulsp_type qrtag
     generate_readme() # crea i tag delle feature con ulsp_type qrtag
     #ul.log(rn+".umap",geojson['properties']['umapKey'])
@@ -549,7 +502,7 @@ ul.show()               # Visualizza l'elenco dei file da caricare nelle rispett
 # senza dover ogni volta effettuare una modifica. Al termine della
 # sessione di debug disabilitare la riga seguente e ripetere il comando
 ####
-# exit() # debug only
+exit() # debug only
 
 # Registra il timestamp
 print("Registro il timestamp")

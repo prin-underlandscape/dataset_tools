@@ -11,8 +11,8 @@ summary = {
     "geometry": {
         "type": "Point",
         "coordinates": [
-            10.5266,
-            44.0960
+            10.405556,
+            44.121944
         ]
     },
     "properties": {
@@ -100,6 +100,7 @@ def generate_summary(ul):
       if '_umap_options' not in f['properties']: f['properties']['_umap_options']={}
       if f['properties']['ulsp_type'] == 'Sito':
         f['properties']['_umap_options']['iconClass'] = 'Ball'
+        f['properties']['_umap_options']['color'] = '#800101' #Override color for sites
       elif f['properties']['ulsp_type'] == 'POI':
         f['properties']['_umap_options']['iconClass'] = 'Circle'
       elif f['properties']['ulsp_type'] == 'QRtag':
