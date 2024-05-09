@@ -502,7 +502,7 @@ ul.show()               # Visualizza l'elenco dei file da caricare nelle rispett
 # senza dover ogni volta effettuare una modifica. Al termine della
 # sessione di debug disabilitare la riga seguente e ripetere il comando
 ####
-exit() # debug only
+# exit() # debug only
 
 # Registra il timestamp
 print("Registro il timestamp")

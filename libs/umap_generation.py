@@ -8,7 +8,7 @@ tag_options = {
   "Parco giochi": { "iconClass": "Drop", "iconUrl": "/uploads/pictogram/playground.svg"},
   "Monumento": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/monument.svg"},
   "Parcheggio": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/parking-car.svg"},
-  "Segnalazione": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/guide-post.svg"},
+  "Segnalazione": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/guidepost.svg"},
   "Fermata Bus": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/bus-stop.svg"}
 }
 ####
@@ -25,6 +25,9 @@ def generate_umap(geojson, rn):
       try:
         if feature["properties"]["ulsp_type"] in allowed_types:
           feature["properties"]["_umap_options"] = {"popupTemplate": "Default"};
+          if "WebPageURL" in geojson["properties"] and geojson["properties"]["WebPageURL"] != "":
+            print(geojson["properties"]["WebPageURL"])
+            feature["properties"]["Link"] = geojson["properties"]["WebPageURL"]
           if feature["properties"]["ulsp_type"] == "POI" and feature["properties"]["Tag primario"] != "":
             print(feature["properties"]["Tag primario"])
             feature["properties"]["_umap_options"] |= tag_options[feature["properties"]["Tag primario"]]
