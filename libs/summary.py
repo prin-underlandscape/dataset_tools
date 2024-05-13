@@ -21,7 +21,8 @@ summary = {
         "easing": False,
         "licence": "",
         "miniMap": False,
-#        "overlay": null,
+#        "overlay": null,,
+        "facetKey": "ulsp_type,Tag primario,Dataset",
         "slideshow": {
 
         },
@@ -48,7 +49,8 @@ summary = {
         "datalayersControl": True,
         "fullscreenControl": True,
         "displayPopupFooter": False,
-        "permanentCreditBackground": True
+        "permanentCreditBackground": True,
+        "popupContentTemplate": "# {ulsp_type} - {Titolo} {Tag primario}\n{{{Foto}|300}}\n**{Descrizione}**\n[[{Link}|Link]] alla pagina dedicata\n**Tag primario**: {Tag primario}\n**Altri tag**: {Altri tag}"   
     },
     "layers": []
 }
@@ -87,16 +89,18 @@ def generate_summary(ul):
       "displayOnLoad": True,
       "iconClass": "Drop",
       "color": color,
-      "popupShape": "Large",
-      "popupTemplate": "Table"
+      "popupTemplate": "Default",
+      "popupContentTemplate": ""
     }
     
     for f in geojson['features']:
+#      print(f)
       f['properties']['Dataset'] = os.path.splitext(fn)[0]
       f['properties']['Link GitHub'] = 'https://github.com/prin-underlandscape/'+os.path.splitext(fn)[0]
   # Compatibilità quando mancano le properties del dataset (geojson)
       if 'properties' in geojson:
         f['properties']['Mappa'] = geojson['properties']['umapKey']
+        f['properties']['name'] = f['properties']['Titolo']
       if '_umap_options' not in f['properties']: f['properties']['_umap_options']={}
       if f['properties']['ulsp_type'] == 'Sito':
         f['properties']['_umap_options']['iconClass'] = 'Ball'
