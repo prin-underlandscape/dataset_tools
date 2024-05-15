@@ -2,15 +2,19 @@ import json
 from colprint import emphprint, failprint, warnprint
 
 tag_options = {
-  "Albergo": { "color": "MediumSlateBlue","iconClass": "Drop", "iconUrl": "/uploads/pictogram/hotel.svg" },
-  "Ristorante": { "iconClass": "Drop", "iconUrl": "/uploads/pictogram/restaurant.svg"},
-  "Bar": { "iconClass": "Drop", "iconUrl": "/uploads/pictogram/cafe.svg" },
-  "Parco giochi": { "iconClass": "Drop", "iconUrl": "/uploads/pictogram/playground.svg"},
-  "Monumento": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/monument.svg"},
-  "Parcheggio": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/parking-car.svg"},
-  "Segnalazione": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/guidepost.svg"},
-  "Fermata Bus": { "iconClass": "Drop", "iconUrl":  "/uploads/pictogram/bus-stop.svg"}
+ "Monumento": { "color": "MediumPurple", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/monument.svg"},
+ "Museo": { "color": "MediumPurple", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/museum.svg"},
+ "Accoglienza": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/hotel.svg"},
+ "Svago": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/playground.svg"},
+ "Ristoro": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/restaurant.svg"},
+ "Servizi": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/government.svg"},
+ "Infopoint": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/information.svg"},
+ "Trasporti": { "color": "Green", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/bus.svg"},
+ "Segnaletica": { "color": "Green", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/guide-post.svg"},
+ "Attrazione naturalistica": { "color": "DarkGoldenRod", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/mountain.svg"},
+ "Grotta": { "color": "Sienna", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/star.svg"}
 }
+
 ####
 # Crea i file umap
 ####
