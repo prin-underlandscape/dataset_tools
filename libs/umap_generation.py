@@ -2,17 +2,18 @@ import json
 from colprint import emphprint, failprint, warnprint
 
 tag_options = {
- "Monumento": { "color": "MediumPurple", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/monument.svg"},
- "Museo": { "color": "MediumPurple", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/museum.svg"},
- "Accoglienza": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/hotel.svg"},
- "Svago": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/playground.svg"},
+ "Grotta": { "color": "Sienna", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/star.svg"},
  "Ristoro": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/restaurant.svg"},
- "Servizi": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/government.svg"},
+ "Accoglienza": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/hotel.svg"},
+ "Svago": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/pitch.svg"},
  "Infopoint": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/information.svg"},
- "Trasporti": { "color": "Green", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/bus.svg"},
- "Segnaletica": { "color": "Green", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/guide-post.svg"},
- "Attrazione naturalistica": { "color": "DarkGoldenRod", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/mountain.svg"},
- "Grotta": { "color": "Sienna", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/star.svg"}
+ "Servizi": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/government.svg"},
+ "Trasporti": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/bus.svg"},
+ "Sanità": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/bus.svg"},
+ "Segnaletica": { "color": "Green", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/guidepost.svg"},
+ "Attrazione naturalistica": { "color": "Green", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/mountain.svg"},
+ "Monumento": { "color": "MediumBlue", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/monument.svg"},
+ "Museo": { "color": "MediumBlue", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/museum.svg"}
 }
 
 ####
