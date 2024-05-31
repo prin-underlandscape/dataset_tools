@@ -25,7 +25,8 @@ import my_git
 from colprint import emphprint, failprint, warnprint
 from summary import generate_summary
 from upload_list import UploadList;
-from umap_generation import generate_umap
+from umap_generation import generate_umap;
+from gpx_generation import generate_gpx;
 
 def grab_image(url,filename):
   with urllib.request.urlopen(url) as response:
@@ -475,6 +476,8 @@ else:
     
     sync_images()     # aggiorna le foto
     generate_umap(geojson, rn)   # crea il file umap
+    if rn.startswith(("ITN")):
+      generate_gpx(geojson, rn)   # crea il file umap
     generate_qrtags() # crea i tag delle feature con ulsp_type qrtag
     generate_readme() # crea i tag delle feature con ulsp_type qrtag
     #ul.log(rn+".umap",geojson['properties']['umapKey'])

@@ -5,7 +5,7 @@ tag_options = {
  "Grotta": { "color": "Sienna", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/star.svg"},
  "Ristoro": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/restaurant.svg"},
  "Accoglienza": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/hotel.svg"},
- "Svago": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/pitch.svg"},
+ "Svago": { "color": "DarkViolet", "iconClass": "Drop", "iconUrl": "https://i.postimg.cc/FKBTtN7Q/trekking.png"},
  "Infopoint": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/information.svg"},
  "Servizi": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/government.svg"},
  "Trasporti": { "color": "Red", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/bus.svg"},
