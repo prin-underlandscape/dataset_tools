@@ -30,6 +30,7 @@ def generate_umap(geojson, rn):
       try:
         if feature["properties"]["ulsp_type"] in allowed_types:
           feature["properties"]["_umap_options"] = {"popupTemplate": "Default"};
+          feature["properties"]["GitHubURL"] = "https://github.com/prin-underlandscape/"+rn;
           if "WebPageURL" in geojson["properties"] and geojson["properties"]["WebPageURL"] != "":
             print(geojson["properties"]["WebPageURL"])
             feature["properties"]["Link"] = geojson["properties"]["WebPageURL"]
