@@ -33,7 +33,7 @@ def generate_umap(geojson, rn):
           feature["properties"]["GitHubURL"] = "https://github.com/prin-underlandscape/"+rn;
           if "WebPageURL" in geojson["properties"] and geojson["properties"]["WebPageURL"] != "":
             print(geojson["properties"]["WebPageURL"])
-            feature["properties"]["Link"] = geojson["properties"]["WebPageURL"]
+            feature["properties"]["ULSPLink"] = geojson["properties"]["WebPageURL"]
           if feature["properties"]["ulsp_type"] == "POI" and feature["properties"]["Tag primario"] != "":
             print(feature["properties"]["Tag primario"])
             feature["properties"]["_umap_options"] |= tag_options[feature["properties"]["Tag primario"]]
@@ -43,7 +43,7 @@ def generate_umap(geojson, rn):
             failprint("Wrong ulsp format")
           layers[0]["features"].append(feature);
       # Setup map center
-          if feature['properties']['ulsp_type'] in ['POI','Sito','QRtag']:
+          if feature['properties']['ulsp_type'] in ['POI','Sito','QRtag','Risorsa']:
             if 'coordinates' not in umap:
               umap["geometry"] = {
                 "type": "Point",

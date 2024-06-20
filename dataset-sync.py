@@ -60,9 +60,9 @@ def vignetteNameFromURL(url):
     return "/vignettes/" + key + ".jpg"
   else:
     if ( url.netloc != "" ):
-      raise ValueError("Invalid image URL")
+      raise ValueError("URL non valida")
     else:
-      raise ValueError("No image URL")
+      raise ValueError("Nessuna immagine")
 
 # Funziona
 def create_user(token):
@@ -279,7 +279,7 @@ def generate_qrtags():
 # Genera il file README.md
 ####
 def generate_readme():
-  print("\u2022 Genero il readme per il dataset QRtags")
+  print("\u2022 Genero il readme per il dataset")
   try:
     with open(rn+"/README.md", 'w', encoding='utf-8') as f:
       f.write("# " + rn + " (")
@@ -307,12 +307,14 @@ def generate_readme():
             f.write("[<img src='"+vignette+"' width='250'/>]("+vignette+") \n\n")
           except KeyError:
             warnprint("   Non è disponibile l'immagine per il QRtag " + feature["properties"]["Titolo"])
+            f.write("*Nessuna immagine* \n\n")
             raise KeyError
           except IndexError:
             warnprint("   Non è disponibile l'immagine per il QRtag "+ feature["properties"]["ulsp_type"] + " " + feature["properties"]["Titolo"])
             f.write("*Nessuna immagine* \n\n")
           except ValueError as e:
             warnprint(str(e))
+            f.write("*Nessuna immagine* \n\n")
           except UnboundLocalError:
             pass
     # select attribute with vignette URL
@@ -385,7 +387,7 @@ user = create_user(config["access_token"])
 # Get list of repositories on github
 remote_repos = list(map(lambda s: s.name, user.get_repos()))
 emphprint("Dataset sull'account github (compresi i dataset)")
-print(list(filter(lambda r: r.startswith(("ULS","QRT","Fase1","ITN")), remote_repos)))
+print(list(filter(lambda r: r.startswith(("ULS","QRT","Fase1","Itinerario")), remote_repos)))
 
 # Get list of repositories with no remote
 missing_repos=set(                                                    # elimina duplicati
@@ -476,7 +478,7 @@ else:
     
     sync_images()     # aggiorna le foto
     generate_umap(geojson, rn)   # crea il file umap
-    if rn.startswith(("ITN")):
+    if rn.startswith(("Itinerario")):
       generate_gpx(geojson, rn)   # crea il file umap
     generate_qrtags() # crea i tag delle feature con ulsp_type qrtag
     generate_readme() # crea i tag delle feature con ulsp_type qrtag

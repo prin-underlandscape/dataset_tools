@@ -39,7 +39,7 @@ def generate_gpx(geojson, rn):
       for feature in geojson["features"]:
         try:
           if feature["properties"]["ulsp_type"] in allowed_types:
-            if feature['properties']['ulsp_type']  in ['POI','Sito','QRtag']:
+            if feature['properties']['ulsp_type']  in ['POI','Sito','QRtag','Risorsa']:
               wpt = Waypoint()
               wpt.lat = feature["geometry"]["coordinates"][1];
               wpt.lon = feature["geometry"]["coordinates"][0];
@@ -56,7 +56,6 @@ def generate_gpx(geojson, rn):
               #wpt.links = [image]
               gpx.waypoints.append(wpt)
             elif feature["properties"]["ulsp_type"] == "Percorso":
-              print("Ecco");
               trk = Track()
               trk.name = "Prova" #feature["properties"]["Titolo"];
               trk.desc = "Descrizione" #feature["properties"]["Descrizione"];

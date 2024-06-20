@@ -103,6 +103,38 @@
                 "popupTemplate": "Table",
                 "popupContentTemplate": "# SITO {Sito}\n{{{Foto}|300}}\n## {Titolo} \n##   [[{GitHubURL}|GitHub repository]] \n## [[{Link}|Link]] alla pagina dedicata\n{Descrizione}\n---\n**Tipologia**: {Tipologia sito}\n**Definizione**: {Definizione}\n**Cronologia iniziale**: {Cronologia iniziale}\n**Cronologia finale**: {Cronologia finale}\n**Reperti ceramici**: {Reperti ceramici}\n**Reperti geologici**: {Reperti geologici}\n**Reperti organici**: {Reperti organici}\n**Altri manufatti**: {Altri manufatti}\n---\n**Altitudine** (m): {Altitudine}\n**Sicurezza**: {Sicurezza}\n**Accessibilità**: {Accessibilità}\n**Copertura rete mobile**: {Copertura rete mobile}\n**Copertura GPS**: {Copertura GPS}\n---\n**Provincia**: {Provincia}\n**Comune**: {Comune}\n**Toponimo**: {Toponimo}\n**Microtoponimo**: {Microtoponimo}\n**Strade d'accesso**: {Strade d'accesso}\n**Altra localizzazione**: {Altri elementi di localizzazione}\n---\n**Prima visita**: {Data} {Ora}\n**Strumento**: {Strumento}\n[[{Bibliografia}|Link]] alla bibliografia"
             }
+        },
+        {
+            "type": "FeatureCollection",
+            "features": [ ],
+            "_umap_options": {
+                "name": "Risorsa",
+                "displayOnLoad": true,
+                "browsable": true,
+                "remoteData": {
+                },
+                "color": "Brown",
+                "iconClass": "Ball",
+                "popupShape": "Panel",
+                "popupTemplate": "Table",
+                "popupContentTemplate": "# {Titolo}\n{{{Foto}|300}}\n{Descrizione}\n**Altitudine** (m): {Altitudine}\n**Repository GitHub**: [[{GitHubURL}|link]]\n**Pagina descrittiva dell'itinerario**: [[{ULSPLink}|link]]\n**Pagina descrittiva della risorsa** :[[{Link}|link]]\n**Tag primario**: {Tag primario}\n**Altri tag**: {Altri tag}"
+            }
+        },
+        {
+            "type": "FeatureCollection",
+            "features": [ ],
+            "_umap_options": {
+                "name": "Itinerario",
+                "displayOnLoad": true,
+                "browsable": true,
+                "remoteData": {
+
+                },
+                "color": "Green",
+                "popupShape": "Panel",
+                "popupTemplate": "Table",
+                "popupContentTemplate": "# {Titolo}\n## Itinerario {Tipologia}\n   ( [[https://sites.google.com/view/prin-underlandscape/home-page/attivit%C3%A0-sul-campo/{Link}|link]]) \n##   [[{GitHubURL}| Download ]] \n{Descrizione}\n--- \n**Lunghezza** (km): {Lunghezza}\n**Durata**: {Durata}\n**Dislivello in salita** (m): {Dislivello in salita}\n**Dislivello in discesa** (m): {Dislivello in discesa}"
+            }
         }
     ]
 }
