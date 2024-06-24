@@ -42,25 +42,22 @@ def generate_umap(geojson, rn):
           if len(layers) != 1:
             failprint("Wrong ulsp format")
           layers[0]["features"].append(feature);
-      # Setup map center
-          if feature['properties']['ulsp_type'] in ['POI','Sito','QRtag','Risorsa']:
-            if 'coordinates' not in umap:
-              umap["geometry"] = {
-                "type": "Point",
-                "coordinates": feature["geometry"]["coordinates"]
-              }
-          elif feature["properties"]["ulsp_type"] == "Percorso":       
-            umap["geometry"] = {
-              "type": "Point",
-              "coordinates": feature["geometry"]["coordinates"][0]
-            }
-          else:
+      # Setup map center, the "geometry" attribute in the umap JSON Object. 
+      # Uses the first feature Point, LineString or MultiLineString in the dataset,
+      # defaults to a point not far from Monzone in Lunigiana
+          if 'geometry' not in umap:
             umap["geometry"] = {
               "type": "Point",
               "coordinates": [10.1, 44.14]
             }
+            if feature['geometry']['type'] == 'Point':
+              umap["geometry"]["coordinates"] = feature["geometry"]["coordinates"]
+            elif feature['geometry']['type'] == 'LineString': 
+              umap["geometry"]["coordinates"] = feature["geometry"]["coordinates"][0]
+            elif feature['geometry']['type'] == 'MultiLineString':      
+              umap["geometry"]["coordinates"] = feature["geometry"]["coordinates"][0][0]      
       # Setup map name
-          umap["properties"]["name"] = rn
+            umap["properties"]["name"] = rn
         else:
           raise KeyError("Wrong ulsp_type")
         with open(rn+"/"+rn+".umap", 'w', encoding='utf-8') as f:
