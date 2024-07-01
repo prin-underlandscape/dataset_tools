@@ -4,6 +4,38 @@ import random
 from colprint import emphprint, failprint, warnprint
 import upload_list
 
+"""
+Aiuto dalla GUI di umap
+Proprietà dinamiche
+Specificando le proprietà dell'oggetto attraverso le parentesi graffe es. {name} queste saranno automaticamente sostituite con i valori corrispondenti
+Formattazione testo
+*un solo asterisco per il corsivo*
+**due asterischi per il testo marcato**
+# un cancelleto per l'intestazione principale
+## due cancelletti per le intestazioni di secondo livello
+### tre cancelletti per intestazione di terzo livello
+Link semplice: [[http://example.com]]
+Link con testo: [[http://example.com|testo del link]]
+Immagini: {{http://image.url.com}}
+Immagine con larghezza personalizzata (width) (in px): {{http://image.url.com|width}}
+Iframe: {{{http://iframe.url.com}}}
+Iframe con altezza (in px) personalizzata: {{{http://iframe.url.com|height}}}
+Iframe con altezza e larghezza personalizzata (in px): {{{http://iframe.url.com|height*width}}}
+--- per una linea orizzontale
+"""
+
+popupTemplate ='''\
+# {Titolo} {Tag primario}
+{{{Foto}|300}}
+{Descrizione}
+Questo **{ulsp_type}** è contenuto nel dataset *{Dataset}*
+La mappa del dataset è visibile [[{umapURL}|qui]]
+Il contenuto del dataset è scaricabile da [[{Link GitHub}|qui]] 
+La pagina dedicata nel sito Web del progetto è [[{WebPageURL}|qui]]
+**Tag primario**: {Tag primario}
+**Altri tag**: {Altri tag}
+'''
+
 summary_filename = "summary.umap"
 summary_URL = "https://umap.openstreetmap.fr/it/map/sommario_1044830"
 summary = {
@@ -49,8 +81,7 @@ summary = {
         "datalayersControl": True,
         "fullscreenControl": True,
         "displayPopupFooter": False,
-        "permanentCreditBackground": True,
-        "popupContentTemplate": "# {ulsp_type} - {Titolo} {Tag primario}\n{{{Foto}|300}}\n**{Descrizione}**\n[[{Link}|Link]] alla pagina dedicata\n**Tag primario**: {Tag primario}\n**Altri tag**: {Altri tag}"   
+        "permanentCreditBackground": True
     },
     "layers": []
 }
@@ -90,7 +121,7 @@ def generate_summary(ul):
       "iconClass": "Drop",
       "color": color,
       "popupTemplate": "Default",
-      "popupContentTemplate": ""
+      "popupContentTemplate": popupTemplate
     }
     
     for f in geojson['features']:
@@ -99,7 +130,11 @@ def generate_summary(ul):
       f['properties']['Link GitHub'] = 'https://github.com/prin-underlandscape/'+os.path.splitext(fn)[0]
   # Compatibilità quando mancano le properties del dataset (geojson)
       if 'properties' in geojson:
-        f['properties']['Mappa'] = geojson['properties']['umapKey']
+        f['properties']['umapURL'] = geojson['properties']['umapKey']
+        try:
+          f['properties']['WebPageURL'] = geojson['properties']['WebPageURL']
+        except KeyError as e:
+          print(f'{e=}')
         f['properties']['name'] = f['properties']['Titolo']
       if '_umap_options' not in f['properties']: f['properties']['_umap_options']={}
       if f['properties']['ulsp_type'] == 'Sito':
