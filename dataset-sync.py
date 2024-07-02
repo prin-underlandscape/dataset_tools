@@ -487,7 +487,8 @@ else:
     push_repo(r)
     shutil.rmtree(rn, ignore_errors=True)
 
-generate_summary(ul)    # genera l'umap di sommario
+# Eliminato: eseguire manualmente con summary-generation.py
+#generate_summary(ul)    # genera l'umap di sommario
 
 ul.show()               # Visualizza l'elenco dei file da caricare nelle rispettive mappe umap
 

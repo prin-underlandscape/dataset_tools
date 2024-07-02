@@ -2,6 +2,18 @@ import os
 import json
 import random
 from colprint import emphprint, failprint, warnprint
+
+# import pytest
+# import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.chrome.service import Service
+
 import upload_list
 
 """
@@ -36,11 +48,9 @@ La pagina dedicata nel sito Web del progetto è [[{WebPageURL}|qui]]
 **Altri tag**: {Altri tag}
 '''
 
-summary_filename = "summary.umap"
-summary_URL = "https://umap.openstreetmap.fr/it/map/sommario_1044830"
+
 
 # Inizializzazione umap mappa Summary 
-
 summary = {
 	"type": "umap",
 	"geometry": {
@@ -259,6 +269,10 @@ FID: {fid}
 # Viene invocata nella directory ottenuta scaricando il repo Master
 def generate_summary(ul):
 
+  # Caricamento del file di configurazione (dovrebbe essere fatto fuori e passato come parametro)
+  with open("../config.json") as json_data:
+    config = json.load(json_data)
+
   emphprint("Generazione della mappa umap di sommario")
 	# filtra i file con estensione geojson
   geojson_files = list(
@@ -326,9 +340,58 @@ def generate_summary(ul):
       except Exception as e:
         print(f'Error: {e}')
 	
-  with open("../summary.umap", 'w', encoding='utf-8') as f:  
+  with open(config["summary_filename"], 'w', encoding='utf-8') as f:  
     json.dump(summary, f , ensure_ascii=False, indent=2)
 	
-  ul.log(summary_filename,summary_URL)
-	
-	
+  ul.log(config["summary_filename"], config["summary_URL"])
+  
+  # Browser configuration
+  chrome_service = Service(executable_path='/snap/chromium/2890/usr/lib/chromium-browser/chromedriver')
+  driver = webdriver.Chrome(service=chrome_service)
+  driver.set_window_size(1600,900)
+  driver.implicitly_wait(60) # useful to wait for login
+  # Start from login page
+  driver.get("https://umap.openstreetmap.fr/it/login/")
+  # Seleziona oauth2 con osm
+  driver.find_element(By.CSS_SELECTOR, ".login-openstreetmap-oauth2").click()
+  # Autenticazione su OSM
+  try:
+    driver.find_element(By.ID, "username").click()
+    driver.find_element(By.ID, "username").send_keys(config["osm_username"])
+    driver.find_element(By.ID, "password").click()
+    driver.find_element(By.ID, "password").send_keys(config["osm_password"])
+    driver.find_element(By.NAME, "commit").click()
+  except NameError as e:
+    print("Credenziali non definite: login manuale")
+    # Attende di accedere alla dashboard	
+    driver.find_element(By.PARTIAL_LINK_TEXT, "Dashboard")
+  # Accede alla mappa Sommario
+  driver.get(config["summary_URL"])
+  # Attende l'abilitazione della modifica della mappa e la seleziona
+  driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-enable > button").click()
+  # Preme il bottone rotella per modificare le impostazioni della mappa
+  driver.find_element(By.CSS_SELECTOR, ".update-map-settings").click()
+  # Preme "Azioni avanzate"
+  driver.find_element(By.CSS_SELECTOR, "details:nth-child(11) > summary").click()
+  # Preme "Clear data"
+  driver.find_element(By.CSS_SELECTOR, ".umap-empty:nth-child(2)").click()
+  # Preme "Rimuovi tutti i layer" (importante)
+  driver.find_element(By.CSS_SELECTOR, ".button:nth-child(3)").click()
+	# Chiude il pannello "Rotella"
+  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
+  # Seleziona il tasto di caricamento "Freccia in alto"
+  driver.find_element(By.CSS_SELECTOR, ".upload-data").click()
+  # Carica i dati (ma si potrebbero anche copiare direttamente nel textbox
+  # senza memorizzarlo in un file
+  upload_file = os.path.abspath(config["summary_filename"])
+  file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
+  file_input.send_keys(upload_file)
+  # Preme pulsante di importazione
+  driver.find_element(By.NAME, "submit").click()
+  # Chiude il pannello di caricamento
+  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
+  # Salva la nuova mappa
+  driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-save").click()
+  # Chiude il pannello di editing (importante: aspettando che il salvataggio termini)
+  driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-disable").click()
+  print("=== Concluso")

@@ -1,0 +1,8 @@
+Rename this file as config.json and complete with values as quoted strings
+If you prefer manual login, remove the username and password name-value pairs
+{
+  "summary_filename": where you want to save the summary file,
+  "summary_URL": the URL of your summary map,
+  "osm_username": your osm username here,
+  "osm_password": your osm password here
+}
