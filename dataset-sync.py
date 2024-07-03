@@ -23,8 +23,8 @@ import sys
 sys.path.append('./libs')
 import my_git
 from colprint import emphprint, failprint, warnprint
-from summary import generate_summary
-from upload_list import UploadList;
+#from summary import generate_summary
+#from upload_list import UploadList;
 from umap_generation import generate_umap;
 from gpx_generation import generate_gpx;
 
@@ -447,7 +447,6 @@ else:
 ###
 # Ricalcolo e aggiornamento dei repository modificati
 ###
-  ul = UploadList()
   for rn in diffrepos:
     ####
     # Ricalcolo e aggiornamento di un singolo dataset
@@ -490,7 +489,13 @@ else:
 # Eliminato: eseguire manualmente con summary-generation.py
 #generate_summary(ul)    # genera l'umap di sommario
 
-ul.show()               # Visualizza l'elenco dei file da caricare nelle rispettive mappe umap
+#ul.show()               # Visualizza l'elenco dei file da caricare nelle rispettive mappe umap
+
+# Registra l'elenco dei dataset modificati per passarlo a umap-sync
+updates=' '.join(diffrepos.union(to_remove).union(missing_repos))
+print(f"Dataset da aggiornare: {updates}")
+with open(r"../update_list", 'a') as f:
+  f.write(f" {updates}")
 
 ####
 # Debug:
