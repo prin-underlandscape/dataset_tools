@@ -25,7 +25,7 @@ import my_git
 from colprint import emphprint, failprint, warnprint
 #from summary import generate_summary
 #from upload_list import UploadList;
-from umap_generation import generate_umap;
+#from umap_generation import generate_umap;
 from gpx_generation import generate_gpx;
 
 def grab_image(url,filename):
@@ -46,7 +46,7 @@ def warnprint(s):
 def cleanup():
   # Esce dal workspace
   os.chdir('..')
-  shutil.rmtree(config['masterName'], ignore_errors=True)
+  shutil.rmtree(config['master_repo'], ignore_errors=True)
   
 def vignetteNameFromURL(url):
   if ( url.netloc == 'i.postimg.cc' ):
@@ -350,14 +350,14 @@ def generate_readme():
         
 
 # Read configuration and assets
-with open("dataset-sync.config") as json_data:
+with open("config.json") as json_data:
   config = json.load(json_data)
   
 logo = Image.open("logoEle_v2.2_small.png").convert("RGBA")
 
 emphprint("Clono il repository Master da github")
-clone(config['masterName'])
-os.chdir(config['masterName'])
+clone(config['master_repo'])
+os.chdir(config['master_repo'])
 
 index = indexList()
 
@@ -476,7 +476,7 @@ else:
       geojson = json.load(json_data)
     
     sync_images()     # aggiorna le foto
-    generate_umap(geojson, rn)   # crea il file umap
+#    generate_umap(geojson, rn)   # crea il file umap
     if rn.startswith(("Itinerario")):
       generate_gpx(geojson, rn)   # crea il file umap
     generate_qrtags() # crea i tag delle feature con ulsp_type qrtag
