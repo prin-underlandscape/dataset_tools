@@ -1,9 +1,14 @@
 Rename this file as config.json and complete with values as quoted strings
-If you prefer manual login, remove the username and password name-value pairs
+For manual login on GitHub remove the username and password name-value pairs
 {
   "summary_filename": where you want to save the summary file,
   "summary_URL": the URL of your summary map,
   "osm_username": your osm username here,
   "osm_password": your osm password here,
-  "master_repo": the name of the repo containing all datasets
+  "master_repo": the name of the repo containing all datasets,
+  "webdriver": the path for the web driver executable (e.g./usr/bin/chromedriver"),
+  "vignette_size": the vignette size (larger side, typ. 640),
+  "username": your gitHub user name,
+  "access_token": your GitHub delete-enabled token,
+  "weburl": default Web URL for QR tags,
 }

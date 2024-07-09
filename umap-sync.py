@@ -130,7 +130,7 @@ with open("config.json") as json_data:
   config = json.load(json_data)
 
 # Browser configuration
-chrome_service = Service(executable_path='/usr/lib/chromium-browser/chromedriver')
+chrome_service = Service(executable_path=config["webdriver"])
 driver = webdriver.Chrome(service=chrome_service)
 driver.set_window_size(1600,900)
 driver.implicitly_wait(60) # useful to wait for login

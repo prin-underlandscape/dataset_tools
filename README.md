@@ -7,11 +7,19 @@ Al momento i tool per la gestione dei dataset sono quattro:
   * **summary-generation.py**: genera la mappa di sommario e la pubblica su umap
   * **mk_dataset_page.sh.py**: genera l'elenco dei repository dei dataset in HTML per incorporarlo nella pagina del sito di Underlandscape
 
+Lo script **make_all.sh** incorpora tutti e tre i passaggi: aggiornamento del dataset, sincronizzazione delle mappe, generazione della mappa di sommario e pagina dei dataset. Al termine dello script, se sono stati aggiunti nuovi dataset, il file *dataset_list.html* va incorporato nella pagina web dei dataset.
+
 ## umap_sync.py: il tool di sincronizzazione da dataset su github a mappe su umap
 
 Il tool serve a sincronizzzare automaticamente un dataset Underlandscape su github con la mappa resa disponibile su umap.openstreetmap.fr.
 
 Il tool utilizza la libreria selenium per python per automatizzare i passi per l'importazione del file umap contenuto nel repository github specifico del dataset nella mappa già associata al dataset.
+
+Per utilizzare il tool è necessario installare il driver di un Web Browser. Su linux si può installare il package *chromium-driver*
+
+```sudo apt install chromium-browser```
+
+Evitare i driver installati con snap perché possono dipendere da librerie in versione difficile da reperire.
 
 Al momento il tool *non* è in grado di generare la mappa: quindi la mappa sul servizio umap deve essere già stata creata ed associata.
 
