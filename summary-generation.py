@@ -71,6 +71,8 @@ for fn in geojson_files:
     f['properties']['Dataset'] = os.path.splitext(fn)[0]
 # Imposta il link github
     f['properties']['Link GitHub'] = 'https://github.com/prin-underlandscape/'+os.path.splitext(fn)[0]
+# Imposta il link per il download
+    f["properties"]["GPXDownload"] = "https://raw.githubusercontent.com/prin-underlandscape/"+datasetName+"/main/"+datasetName+".gpx"
     try:
 # Imposta la URL della mappa uMap
       f['properties']['umapURL'] = geojson['properties']['umapKey']

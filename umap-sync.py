@@ -17,7 +17,7 @@ from selenium.webdriver.common.keys import Keys
 from colprint import emphprint, failprint, warnprint
 from umap_common import tag_options, summary
 
-def generate_umap(geojson):
+def generate_umap(geojson, dataset_name):
   rn = geojson["properties"]["Nome"]
   try:
     umap=deepcopy(summary)
@@ -61,8 +61,10 @@ def generate_umap(geojson):
     for feature in geojson["features"]:
       try:
         if feature["properties"]["ulsp_type"] in allowed_types:
-          feature["properties"]["_umap_options"] = {"popupTemplate": "Default"};
-          feature["properties"]["GitHubURL"] = "https://github.com/prin-underlandscape/"+rn;
+          feature["properties"]["_umap_options"] = {"popupTemplate": "Default"}
+          feature['properties']['Dataset'] = dataset_name
+          feature["properties"]["GitHubURL"] = "https://github.com/prin-underlandscape/"+rn
+          feature["properties"]["GPXDownload"] = "https://raw.githubusercontent.com/prin-underlandscape/"+rn+"/main/"+rn+".gpx"
           if "WebPageURL" in geojson["properties"] and geojson["properties"]["WebPageURL"] != "":
 #            print(geojson["properties"]["WebPageURL"])
             feature["properties"]["ULSPLink"] = geojson["properties"]["WebPageURL"]
@@ -160,7 +162,7 @@ for fn in sys.argv[1:]:
   # Download dataset geojsos and extract URL of umap map
     with urlopen(f"https://raw.githubusercontent.com/prin-underlandscape/Master/main/{dataset_name}.geojson") as content:
       geojson = json.load(content)
-    generate_umap(geojson)
+    generate_umap(geojson, dataset_name)
     sync(geojson["properties"]["umapKey"])
   except KeyError as error:
     print("C'è stato un problema:", error)

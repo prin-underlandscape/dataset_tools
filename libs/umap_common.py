@@ -209,7 +209,7 @@ La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
 {{{Foto}|300}}
 {Descrizione}
 **Altitudine** (m): {Altitudine}
-**Pagina descrittiva della risorsa** :[[{Link}|link]]
+**Pagina Web**: [[{Link}|link]]
 **Tag primario**: {Tag primario}
 **Altri tag**: {Altri tag}"
 ---
@@ -232,14 +232,23 @@ La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
         "popupContentTemplate": '''\
 # {Titolo}
 ## Itinerario {Tipologia}
-   ( [[https://sites.google.com/view/prin-underlandscape/home-page/attivit%C3%A0-sul-campo/{Link}|link]]) 
-##   [[{GitHubURL}| Download ]] 
 {Descrizione}
---- 
+[[{GPXDownload}|Scarica]] in formato GPX
+---
+{{{Foto accesso}|150}}
+**Punto d'accesso**: {Punto d'accesso}
+**Provincia**: {Provincia}
+**Comune**: {Comune}
 **Lunghezza** (km): {Lunghezza}
 **Durata**: {Durata}
 **Dislivello in salita** (m): {Dislivello in salita}
 **Dislivello in discesa** (m): {Dislivello in discesa}
+**Difficoltà** (km): {Difficoltà}
+**Segnaletica**: {Segnaletica}
+---
+Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
+Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
+La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 '''
       }
     }
