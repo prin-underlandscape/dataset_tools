@@ -15,12 +15,12 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.keys import Keys
 
 from colprint import emphprint, failprint, warnprint
-from umap_common import tag_options, umap_template
+from umap_common import tag_options, summary
 
 def generate_umap(geojson):
   rn = geojson["properties"]["Nome"]
   try:
-    umap=deepcopy(umap_template)
+    umap=deepcopy(summary)
     print("\u2022 Generazione del file umap")
     allowed_types = list(map(lambda l: l["_umap_options"]["name"], umap["layers"]))
 # compute map center        

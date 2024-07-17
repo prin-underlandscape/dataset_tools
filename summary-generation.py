@@ -6,6 +6,7 @@ import pygit2
 import json
 import random
 import time
+import re
 
 from colprint import emphprint, failprint, warnprint
 
@@ -43,27 +44,43 @@ ul = UploadList()
 emphprint("Generazione della mappa umap di sommario")
 # filtra i file con estensione geojson
 geojson_files = list(
-filter(lambda fn: os.path.splitext(fn)[1] == ".geojson", os.listdir(".")) 
+  filter(lambda fn: os.path.splitext(fn)[1] == ".geojson", os.listdir(".")) 
 )
 #print(geojson_files)
 
+# Esamina tutti i dataset
 for fn in geojson_files:
-  emphprint("  Includo il dataset " + os.path.splitext(fn)[0])
+  datasetName = os.path.splitext(fn)[0]
+# Esclude dal sommario itinerari e test
+  if re.search("^ITN.*", datasetName): continue
+  if re.search("^Itinerario.*", datasetName): continue
+  if re.search("^test.*", datasetName): continue
+  emphprint("  Includo il dataset " + datasetName)
   with open(fn) as json_data:
     geojson = json.load(json_data)
+# la variabile geojson è il dataset in geojson
+# generazione del colore casuale
   random.seed(sum(map(ord,fn)))
   randomColor = hex(random.randint(0,16777215)).replace('0x','#')
-    
+
+# Esamina tutte le features nel dataset
   for f in geojson['features']:
-    ulspType = f['properties']['ulsp_type']
+# acquisisce il tipo della feature
+    ulspType = f['properties']['ulsp_type'] 	  
+# Imposta il nome del dataset
     f['properties']['Dataset'] = os.path.splitext(fn)[0]
+# Imposta il link github
     f['properties']['Link GitHub'] = 'https://github.com/prin-underlandscape/'+os.path.splitext(fn)[0]
     try:
+# Imposta la URL della mappa uMap
       f['properties']['umapURL'] = geojson['properties']['umapKey']
+# Imposta la URL della pagina decicata nel sito Underlandscape
       f['properties']['WebPageURL'] = geojson['properties']['WebPageURL']
     except KeyError as e:
       print(f'Error: {e}')
+# Imposta il "name" (comodità...)
     f['properties']['name'] = f['properties']['Titolo']
+# Imposta le umap_options dipendenti dal tipo della feature
     f['properties']['_umap_options']={}
     if ulspType == 'Sito':
       f['properties']['_umap_options'] = {
@@ -98,10 +115,14 @@ for fn in geojson_files:
       }
     else:
       raise KeyError("Tipo di feature non prevista")
+# Impostazione _map_options comuni      
+    f['properties']['_umap_options']['popupTemplate'] = "Default"
     try:
+# Seleziona il layer con il nome uguale al tipo della nuova feature
       layer=next(
         filter(lambda l: l["_umap_options"]["name"] == ulspType, summary["layers"])
       )
+# Aggancia la nuova feature al livello
       layer["features"].append(f)
       print(f'{ulspType} - {f["properties"]["name"]}')
     except Exception as e:
