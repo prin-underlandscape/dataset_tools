@@ -209,15 +209,13 @@ La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
 {{{Foto}|300}}
 {Descrizione}
 **Altitudine** (m): {Altitudine}
-**Repository GitHub**: [[{GitHubURL}|link]]
-**Pagina descrittiva dell'itinerario**: [[{ULSPLink}|link]]
 **Pagina descrittiva della risorsa** :[[{Link}|link]]
 **Tag primario**: {Tag primario}
 **Altri tag**: {Altri tag}"
 ---
 Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
 Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
-La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
+La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 '''
       }
     },
