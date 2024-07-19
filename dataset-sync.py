@@ -289,11 +289,14 @@ def generate_readme():
       except:
         f.write("mappa non collegata")
       f.write(")\n")
+      print(geojson)
       try:
         if geojson["properties"]["Descrizione"] == "": raise KeyError("Descrizione vuota")
-        f.write(geojson["properties"]["Descrizione"] + "\n")
+        f.write(geojson["properties"]["Descrizione"] + "\n\n")
       except:
-        f.write("descrizione del dataset mancante\n")
+        f.write("descrizione del dataset mancante\n")    
+      f.write("Questo dataset fa parte dei risultati del progetto [PRIN Underlandscape](https://sites.google.com/view/prin-underlandscape/)\n\n")   
+      f.write("La mappa di sommario con tutti i dataset prodotti nel corso del progetto è disponibile a questo [link](https://umap.openstreetmap.fr/it/map/sommario_1044830)\n\n")
       for feature in geojson["features"]:
         ulsp_type = feature["properties"]["ulsp_type"]
         f.write("## " + feature["properties"]["ulsp_type"] + ": " + feature["properties"]["Titolo"] + "\n")
@@ -477,8 +480,8 @@ else:
     
     sync_images()     # aggiorna le foto
 #    generate_umap(geojson, rn)   # crea il file umap
-    if rn.startswith(("Itinerario")):
-      generate_gpx(geojson, rn)   # crea il file umap
+#    if rn.startswith(("Itinerario")):
+    generate_gpx(geojson, rn)   # crea il file gpx
     generate_qrtags() # crea i tag delle feature con ulsp_type qrtag
     generate_readme() # crea i tag delle feature con ulsp_type qrtag
     #ul.log(rn+".umap",geojson['properties']['umapKey'])

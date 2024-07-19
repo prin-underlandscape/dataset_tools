@@ -40,11 +40,11 @@ summary = {
     "slideshow": {},
     "tilelayer": {
        "tms": False,
-       "name": "OSM OpenTopoMap",
-       "maxZoom": 20,
-       "minZoom": 1,
-       "attribution": "Kartendaten: © [[https://openstreetmap.org/copyright|OpenStreetMap]]-Mitwirkende, [[http://viewfinderpanoramas.org/|SRTM]] | Kartendarstellung: © [[https://opentopomap.org/|OpenTopoMap]]    ([[https://creativecommons.org/licenses/by-sa/3.0/|CC-BY-SA]])",
-       "url_template": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+       "name": "OSM Outdoors (Thunderforest)",
+       "maxZoom": 18,
+       "minZoom": 0,
+       "attribution": "Tiles © [[http://www.thunderforest.com/outdoors/|Thunderforest]] / map data © [[http://osm.org/copyright|OpenStreetMap contributors]] under ODbL",
+       "url_template": "https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=e6b144cfc47a48fd928dad578eb026a6"
     },
     "captionBar": False,
     "description": "Summary map of Underlandscape activity and results",
@@ -75,15 +75,24 @@ summary = {
           "popupContentTemplate": '''\
 # {Titolo}
 {Descrizione}
+[[{GPXDownload}|Scarica]] il percorso in formato GPX
 ---
 Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
 Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
-La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
+La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 --- 
+
+**Punto d'accesso**: {Punto d'accesso}
+**Provincia**: {Provincia}
+**Comune**: {Comune}
 **Lunghezza** (km): {Lunghezza}
 **Durata**: {Durata}
 **Dislivello in salita** (m): {Dislivello in salita}
-**Dislivello in discesa** (m): {Dislivello in discesa} 
+**Dislivello in discesa** (m): {Dislivello in discesa}
+**Difficoltà** (km): {Difficoltà}
+**Segnaletica**: {Segnaletica} 
+**Copertura GPS**: {Copertura GPS} 
+**Copertura rete Mobile**: {Copertura rete mobile} 
 --- 
 Registrato il {Data} alle {Ora} 
 con {Strumento} 
