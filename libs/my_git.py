@@ -90,7 +90,7 @@ def commitMaster():
   else:
     colprint.emphprint('Nothing to commit on summary repository')
     
-def push_repo(r):
+def push_repo(r, username, access_token):
 # if list(map(lambda r: r.delta.new_file.path, r.diff("HEAD"))):
   # Build index and tree
   r.index.add_all()
@@ -102,7 +102,7 @@ def push_repo(r):
   r.create_commit('HEAD', author, author, message,tree,[r.head.target])
   # Push
   # Build credentials
-  credentials = pygit2.UserPass(config["username"], config["access_token"])
+  credentials = pygit2.UserPass(username, access_token)
   # Push on "origin" remote with user credentials
   remote = r.remotes["origin"]
   remote.credentials = credentials
