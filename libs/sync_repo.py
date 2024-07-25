@@ -22,7 +22,7 @@ import json
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 
-from my_git import clone
+from my_git import clone, push_repo
 from gpx_generation import generate_gpx;
 
 def grab_image(url, filename, vignette_size):
@@ -206,7 +206,7 @@ def generate_readme(geojson, dataset_name):
           f.write(feature["properties"]["Descrizione"] + "\n\n")
         except:
           warnprint(f"   Non è disponibile la descrizione di {feature['properties']['Titolo']} ({ulsp_type})")
-          f.write("Descrizione di {feature['properties']['Titolo']} ({ulsp_type) mancante\n")     
+          f.write(f"Descrizione di {feature['properties']['Titolo']} ({ulsp_type}) mancante\n")     
     # if qrtag display the tag
         if ( ulsp_type == "QRtag" ):
           try:
@@ -267,7 +267,7 @@ def sync_repo(dataset_name, config, logo):
     if isdir(dataset_name):
       rmtree(dataset_name, ignore_errors=True)
 # Clona il repository del dataset (la directory generata ha il nome del dataset)
-    clone(dataset_name)
+    dataset_repository = clone(dataset_name)
   except Exception as e:
     raise(e)
     
@@ -300,7 +300,7 @@ def sync_repo(dataset_name, config, logo):
   generate_readme(geojson, dataset_name) # 
   # #ul.log(rn+".umap",geojson['properties']['umapKey'])
   
-#  push_repo(dataset_repository, config["username"], config["access_token"])
+  push_repo(dataset_repository, config["username"], config["access_token"])
   rmtree(dataset_name, ignore_errors=True)
   
   return

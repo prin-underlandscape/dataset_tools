@@ -59,10 +59,10 @@ def generate_gpx(geojson, rn):
             #image.text = "Immagine"
             #wpt.links = [image]
             gpx.waypoints.append(wpt)
-          elif feature["properties"]["ulsp_type"] == "Percorso":
+          elif feature["properties"]["ulsp_type"] in ["Percorso","Itinerario"]:
             trk = Track()
-            trk.name = "Prova" #feature["properties"]["Titolo"];
-            trk.desc = "Descrizione" #feature["properties"]["Descrizione"];
+            trk.name = feature["properties"]["Titolo"];
+            trk.desc = feature["properties"]["Descrizione"];
             # Linestring
             trksgmt = TrackSegment();
             trksgmt.trkpts = list(map(mkwpt,feature["geometry"]["coordinates"]));

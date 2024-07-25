@@ -54,9 +54,8 @@ def pull():
 # Restituisce l'insieme (senza ripetizioni) dei file modificati
 # dall'ultima sincronizzazione    
 ###
-def diffFiles():
+def diffFiles(master):
   result = []
-  master = pygit2.Repository('.')
   commit = list(master.walk(master.head.target))[0]
   while ( any(commit.parents) ):
     diff = master.diff(commit, commit.parents[0])

@@ -1,3 +1,6 @@
+import sys 
+sys.path.append('./libs')
+
 import urllib.request
 import io
 import os
@@ -17,11 +20,10 @@ from github import Github
 from github import Auth
 import pygit2
 
-from pprint import pprint
+from os.path import splitext, basename
+from sync_repo import sync_repo
 
-import sys 
-sys.path.append('./libs')
-import my_git
+from my_git import diffFiles, push_repo, clone
 from colprint import emphprint, failprint, warnprint
 #from summary import generate_summary
 #from upload_list import UploadList;
@@ -44,8 +46,6 @@ def warnprint(s):
 #grab_image(image_url,"image.jpg")
 
 def cleanup():
-  # Esce dal workspace
-  os.chdir('..')
   shutil.rmtree(config['master_repo'], ignore_errors=True)
   
 def vignetteNameFromURL(url):
@@ -76,11 +76,11 @@ def create_user(token):
   return user
   
 # Funziona
-def clone(repoName):
-  if os.path.isdir(repoName):
-    warnprint("Please remove "+repoName+" folder")
-    exit()
-  return pygit2.clone_repository("https://github.com/prin-underlandscape/"+repoName,repoName)
+# def clone(repoName):
+  # if os.path.isdir(repoName):
+    # warnprint("Please remove "+repoName+" folder")
+    # exit()
+  # return pygit2.clone_repository("https://github.com/prin-underlandscape/"+repoName,repoName)
 
 # Funziona
 def pull():
@@ -105,23 +105,23 @@ def pull():
 # Restituisce l'insieme (senza ripetizioni) dei file modificati
 # dall'ultima sincronizzazione    
 ###
-def diffFiles():
-  result = []
-  master = pygit2.Repository('.')
-  commit = list(master.walk(master.head.target))[0]
-  while ( any(commit.parents) ):
-    diff = master.diff(commit, commit.parents[0])
-    df = list(
-            map(lambda obj: obj.delta.new_file.path, 
-              filter(lambda obj: type(obj) == pygit2.Patch, diff))
-        )
-#    print(df)
-    if ( ".lastsync" in df ): break
-    result += df
-    commit = commit.parents[0]
-#    print("---")
-#  pprint(list(set(result)))
-  return list(set(result))
+# def diffFiles():
+  # result = []
+  # master = pygit2.Repository('.')
+  # commit = list(master.walk(master.head.target))[0]
+  # while ( any(commit.parents) ):
+    # diff = master.diff(commit, commit.parents[0])
+    # df = list(
+            # map(lambda obj: obj.delta.new_file.path, 
+              # filter(lambda obj: type(obj) == pygit2.Patch, diff))
+        # )
+# #    print(df)
+    # if ( ".lastsync" in df ): break
+    # result += df
+    # commit = commit.parents[0]
+# #    print("---")
+# #  pprint(list(set(result)))
+  # return list(set(result))
 
 # Funziona
 def indexList():
@@ -141,28 +141,28 @@ def commitMaster():
   else:
     emphprint('Nothing to commit on summary repository')
     
-def push_repo(r):
-# if list(map(lambda r: r.delta.new_file.path, r.diff("HEAD"))):
-  # Build index and tree
-  r.index.add_all()
-  r.index.write()
-  tree = r.index.write_tree()
-  # Commit
-  author = pygit2.Signature("Augusto Ciuffoletti", "augusto.ciuffoletti@gmail.com")
-  message = input("Digita il messaggio di commit per il dataset: ")
-  r.create_commit('HEAD', author, author, message,tree,[r.head.target])
-  # Push
-  # Build credentials
-  credentials = pygit2.UserPass(config["username"], config["access_token"])
-  # Push on "origin" remote with user credentials
-  remote = r.remotes["origin"]
-  remote.credentials = credentials
-  callbacks=pygit2.RemoteCallbacks(credentials=credentials)
-  remote.push(['refs/heads/main'],callbacks=callbacks)
-#  else:
-#    emphprint('   Non è necessario aggiornare questo dataset')
+# def push_repo(r):
+# # if list(map(lambda r: r.delta.new_file.path, r.diff("HEAD"))):
+  # # Build index and tree
+  # r.index.add_all()
+  # r.index.write()
+  # tree = r.index.write_tree()
+  # # Commit
+  # author = pygit2.Signature("Augusto Ciuffoletti", "augusto.ciuffoletti@gmail.com")
+  # message = input("Digita il messaggio di commit per il dataset: ")
+  # r.create_commit('HEAD', author, author, message,tree,[r.head.target])
+  # # Push
+  # # Build credentials
+  # credentials = pygit2.UserPass(config["username"], config["access_token"])
+  # # Push on "origin" remote with user credentials
+  # remote = r.remotes["origin"]
+  # remote.credentials = credentials
+  # callbacks=pygit2.RemoteCallbacks(credentials=credentials)
+  # remote.push(['refs/heads/main'],callbacks=callbacks)
+# #  else:
+# #    emphprint('   Non è necessario aggiornare questo dataset')
 
-# Vero se il file f è nel sidecar del repository r
+# # Vero se il file f è nel sidecar del repository r
 def in_sidecar(f,r):
   return f.startswith(r+'.')
 
@@ -359,174 +359,123 @@ with open("config.json") as json_data:
 logo = Image.open("logoEle_v2.2_small.png").convert("RGBA")
 
 emphprint("Clono il repository Master da github")
-clone(config['master_repo'])
-os.chdir(config['master_repo'])
+master = clone(config['master_repo'])
 
-index = indexList()
+index = list(map(lambda obj: obj.name, list(master.walk(master.head.target))[0].tree)) #indexList()
 
-emphprint("File nell'indice github del repository master")
-print(index)
+diff = diffFiles(master)
+emphprint("File modificati dall'ultima modifica del file .lastsync")
+print(diff)
 
-diffrepos = set(                                          # elimina duplicati
-              map(lambda fn: fn.split('.')[0],            # seleziona quello che precede il primo . (file nel sidecar)
-              filter(lambda fn: fn in os.listdir("."),diffFiles())) # seleziona solo i file ancora presenti nella directory
+to_update = set(                                          						# elimina duplicati
+              map(lambda fn: splitext(basename(fn))[0],            				# seleziona quello che precede il primo . (geojson e file nel sidecar)
+              filter(lambda fn: fn in os.listdir(config['master_repo']),diff))	# seleziona solo i file ancora presenti nella directory
             )
 emphprint("Dataset da aggiornare")
-if diffrepos: print(diffrepos)
+if to_update: print(to_update)
 else: print("nessuno")
 
 to_remove = set(
-              map(lambda fn: fn.split('.')[0],                 # seleziona quello che precede il primo . (file nel sidecar)
-              filter(lambda fn: fn not in os.listdir("."),diffFiles())) # seleziona i file non più nella directory (rimossi)
+              map(lambda fn: splitext(basename(fn))[0],                 			# seleziona quello che precede il primo . (file nel sidecar)
+              filter(lambda fn: fn not in os.listdir(config['master_repo']),diff))	# seleziona i file non più nella directory (rimossi)
             )
 emphprint("Dataset da rimuovere")
 if to_remove: print(to_remove)
 else: print("nessuno")
 
 # Create user with credentials
-emphprint("Accesso all'account GitHub")
+emphprint("Creo l'utente GitHub con credenziali base e delete")
 user = create_user(config["access_token"])
 
-# Get list of repositories on github
-remote_repos = list(map(lambda s: s.name, user.get_repos()))
-emphprint("Dataset sull'account github (compresi i dataset)")
-print(list(filter(lambda r: r.startswith(("ULS","QRT","Fase1","Itinerario")), remote_repos)))
+# Get list of dataset repositories on github
+dataset_repos = list(
+                  filter(lambda r: r.startswith(("ULS","QRT","Fase1","Itinerario","ITN","test")), 	# select based on filename prefix
+                    list(map(lambda s: s.name, user.get_repos()))									# all the repos of the user
+                  )
+                )
+emphprint("Repository di dataset sull'account github")
+print(dataset_repos)
 
 # Get list of repositories with no remote
-missing_repos=set(                                                    # elimina duplicati
-                filter(lambda r: r not in remote_repos,               # filtra quelli che non hanno repo su GitHub
-                map(lambda fn: os.path.splitext(fn)[0],diffFiles()))  # elimina l'estensione dei file indice
+missing_repos=set(                                                    		# elimina duplicati (per file nel sidecar)
+                filter(lambda r: r not in dataset_repos,               		# filtra quelli che non hanno repo su GitHub
+                map(lambda fn: splitext(basename(fn))[0],diff)) 			 # elimina l'estensione dei file indice
               )
 emphprint("Dataset da creare")
 if missing_repos: print(missing_repos)
 else: print("nessuno")
 
 # Exit if no parameters
-if not diffrepos.union(to_remove).union(missing_repos):
+if not to_update.union(to_remove).union(missing_repos):
   emphprint("Nessun aggiornamento necessario")
-#### Solo debug summary ##############################################
-#  ul = UploadList()
-#  generate_summary(ul)    # genera l'umap di sommario
-#  ul.show()
-#### FINE debug ######################################################
   cleanup()
   exit()
-else:
-  # Ask confirm
-  emphprint("Sommario delle operazioni sui dataset:")
-  for r in diffrepos.union(to_remove):
-    print("\u2022 "+r, end="")
-    if r in missing_repos: print(" (da creare)")
-    elif r in to_remove: print(" (da rimuovere)")
-    else: print(" (da aggiornare)")
-  l=input("Premi a capo per continuare, CTRL-C per interrompere: -> ")
-  if l != "":
-    cleanup()
-    exit()
-  
+
 ###
-# Creazione dei repository relativi a nuovi geojson
+# Visualizzazione azione e conferma
 ###
-  for rn in missing_repos:
-    emphprint("Creazione del repository "+rn)
-    repo = user.create_repo(rn, description = rn + ": dataset geolocalizzato del progetto Underlandscape" )
-    repo.create_file("README.md", "Create empty README", "# " + rn)
+emphprint("Sommario delle operazioni sui dataset:")
+for r in to_update.union(to_remove):
+  print("\u2022 "+r, end="")
+  if r in to_remove: print(" (da rimuovere)")
+  elif r in missing_repos: print(" (da creare)")
+  else: print(" (da aggiornare)")
+
+l=input("Premi a capo per continuare, CTRL-C per interrompere: -> ")
+if l != "":
+  cleanup()
+  exit()
 
 ###
 # Rimozione dei repository relativi a geojson rimossi
 ###
-  rmlist = list( filter(lambda r: r.name in to_remove, user.get_repos()))
-  for r in rmlist:
-    l='x'
-    while l not in ['s','n']:
-      warnprint("Autorizzi la rimozione del dataset "+r.name+ " (s oppure n)?")
-      l=input("-> ")
-    if l == 's':
-      print("Rimozione del dataset "+r.name)
-      r.delete()
-    else:
-      emphprint("La rimozione del dataset non verrà più riproposta e dovrà essere effettuata manualmente")
+for repo in to_remove:
+  l='x'
+  while l not in ['s','n']:
+    warnprint("Autorizzi la rimozione del dataset "+repo+ " (s oppure n)?")
+    l=input("-> ")
+  if l == 's':
+    print("Rimozione del dataset "+repo)
+    try:
+      list(filter(lambda r: r.name == repo, user.get_repos()))[0].delete()
+    except:
+      warnprint(f"Non riesco a rimuovere il repository {repo}")
+  else:
+    emphprint("La rimozione del dataset non verrà più riproposta e dovrà essere effettuata manualmente")
+
+###
+# Creazione dei repository relativi a nuovi geojson
+###
+for rn in missing_repos:
+  emphprint("Creazione del repository "+rn)
+  repo = user.create_repo(rn, description = rn + ": dataset geolocalizzato del progetto Underlandscape" )
+  repo.create_file("README.md", "Create empty README", "# " + rn)
 
 ###
 # Ricalcolo e aggiornamento dei repository modificati
 ###
-  for rn in diffrepos:
-    ####
-    # Ricalcolo e aggiornamento di un singolo dataset
-    ####
-    
-    # Clona il repository dataset
-    emphprint("Clono "+rn)
-    if os.path.isdir(rn):
-      shutil.rmtree(rn, ignore_errors=True)
-    r = clone(rn)
-    
-    # Copia il geojson e i file nel sidecar nel repository clonato
-    # I file nel sidecar hanno il nome che inizia con il nome del repo seguito da .
-    files = list(filter(lambda fn: in_sidecar(fn,rn), os.listdir(".")))
-    print("\u2022 Copio i file modificati:", end=" ")
-    for f in files:
-      try:
-        print(f, end=" ")
-        shutil.copyfile(f,rn+"/"+f)
-      except:
-        warnprint("Cannot copy file in cloned directory ("+f+")")
-        continue
-    print()
+for fn in to_update:
+  dataset_name = splitext(basename(fn))[0]
+  sync_repo(dataset_name, config, logo)
 
-    # Carica in una variabile il geojson (una FeatureCollection)
-    with open(rn+"/"+rn+".geojson") as json_data:
-      geojson = json.load(json_data)
-    
-    sync_images()     # aggiorna le foto
-#    generate_umap(geojson, rn)   # crea il file umap
-#    if rn.startswith(("Itinerario")):
-    generate_gpx(geojson, rn)   # crea il file gpx
-    generate_qrtags() # crea i tag delle feature con ulsp_type qrtag
-    generate_readme() # crea i tag delle feature con ulsp_type qrtag
-    #ul.log(rn+".umap",geojson['properties']['umapKey'])
-    
-    push_repo(r)
-    shutil.rmtree(rn, ignore_errors=True)
+# Registra il timestamp
+print("Modifico il file .lastsync")
+with open(f"{config['master_repo']}/.lastsync", mode='a') as f:
+    f.write(f'{datetime.datetime.utcnow():%Y-%m-%d %H:%M:%S UTC}\n')
 
-# Eliminato: eseguire manualmente con summary-generation.py
-#generate_summary(ul)    # genera l'umap di sommario
+# Aggiorno il repository Master su github
+push_repo(master, config["username"], config["access_token"] )
 
-#ul.show()               # Visualizza l'elenco dei file da caricare nelle rispettive mappe umap
+# Rimozione della directory Master
+cleanup()
 
 # Registra l'elenco dei dataset modificati per passarlo a umap-sync
-updates=' '.join(diffrepos.union(to_remove).union(missing_repos))
+updates=' '.join(to_update.union(to_remove).union(missing_repos))
 print(f"Dataset da aggiornare: {updates}")
 with open(r"../update_list", 'a') as f:
   f.write(f" {updates}")
 
-####
-# Debug:
-# -) togliere il commento dalla riga che segue
-# -) clonare o fare pull dell'archivio master in una directory
-#    diversa da questa (IMPORTANTE)
-# -) effettuare una modifica in un file nell'archivio master così creato
-#   (quale dipende dal problema riscontrato)
-# -) fare commit nell'archivio master
-# -) fare push nell'archivio master
-# -) richiamare questa funzione, se necessario rimuovendo prima
-#    il clone del repository master che viene creato in questa 
-#    directory
-# In questo modo l'esecuzione di questo programma può essere ripetuta
-# senza dover ogni volta effettuare una modifica. Al termine della
-# sessione di debug disabilitare la riga seguente e ripetere il comando
-####
-# exit() # debug only
 
-# Registra il timestamp
-print("Registro il timestamp")
-with open(".lastsync", mode='a') as f:
-    f.write(f'{datetime.datetime.utcnow():%Y-%m-%d %H:%M:%S UTC}\n')
-
-# Aggiorno il repository Master su github
-push_repo(pygit2.Repository('.'))
-
-cleanup()
 
 
 
