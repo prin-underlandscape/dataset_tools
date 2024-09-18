@@ -65,9 +65,11 @@ def generate_umap(geojson, dataset_name):
           feature['properties']['Dataset'] = dataset_name
           feature["properties"]["GitHubURL"] = "https://github.com/prin-underlandscape/"+rn
           feature["properties"]["GPXDownload"] = "https://raw.githubusercontent.com/prin-underlandscape/"+rn+"/main/"+rn+".gpx"
-          if "WebPageURL" in geojson["properties"] and geojson["properties"]["WebPageURL"] != "":
+          if "Link" in geojson["properties"] and geojson["properties"]["Link"] != "":
 #            print(geojson["properties"]["WebPageURL"])
-            feature["properties"]["ULSPLink"] = geojson["properties"]["WebPageURL"]
+            feature["properties"]["Link"] = geojson["properties"]["Link"]
+          else:
+            feature["properties"]["Link"] = "https://sites.google.com/view/prin-underlandscape/link-non-disponibile"
           if feature["properties"]["ulsp_type"] in ["POI","Risorsa"] and feature["properties"]["Tag primario"] != "":
             print(feature["properties"]["Tag primario"])
             feature["properties"]["_umap_options"].update(tag_options[feature["properties"]["Tag primario"]])

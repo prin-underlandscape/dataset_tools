@@ -233,6 +233,8 @@ La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
       "features": [ ],
       "_umap_options": {
         "name": "Itinerario",
+        "color": "Brown",
+        "weight": 6,
         "displayOnLoad": True,
         "browsable": True,
         "remoteData": {},
