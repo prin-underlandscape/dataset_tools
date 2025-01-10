@@ -3,10 +3,10 @@
 Al momento i tool per la gestione dei dataset sono cinque:
 
   * **repo-sync**: sincronizza il contenuto di un repository di dataset rispetto al contenuto del dataset nel repository Master. E' un semplice wrapper della funzione di libreria omonima nel file libs/sync_repo.py
-  * **master-sync.py**: esamina gli aggiornamenti recenti ai dataset nel repository master e sincronizza i repository dei dataset non aggiornati, applicando la funzione repo_sync.py
-  * **umap_sync.py**: sincronizza la mappa presente su umap.openstreetmap.org generando il file umap corrispondente a partire dal dataset nel repository Master
+  * **umap-sync.py**: sincronizza la mappa presente su umap.openstreetmap.org generando il file umap corrispondente a partire dal dataset nel repository Master
   * **summary-generation.py**: genera la mappa di sommario e la pubblica su umap nella mappa collegata
   * **mk_dataset_page.sh.py**: genera l'elenco dei repository dei dataset in HTML per incorporarlo nella pagina del sito di Underlandscape
+  * **master-sync.py**: (OBSOLETO usare invece repo-sync e umap-sync) esamina gli aggiornamenti recenti ai dataset nel repository master e sincronizza i repository dei dataset non aggiornati, applicando la funzione repo_sync.py
 
 Lo script **make_all.sh** incorpora tutti e tre i passaggi: aggiornamento del dataset, sincronizzazione delle mappe, generazione della mappa di sommario e pagina dei dataset. Al termine dello script, se sono stati aggiunti nuovi dataset, il file *dataset_list.html* va incorporato nella pagina web dei dataset.
 
@@ -62,6 +62,8 @@ Per ottenere questo risultato i passi possono essere i seguenti:
  5. nell'archivio Master dei dataset, editare con Off il repository e copiare nel campo opportuno la URL copiata al passo precedente
  6. fare push del repository Master csì modificato
  7. con il comando dataset-sync sincronizzare il repository specifico con il nuovo contenuto
+
+*Attenzione*: il tool non tollera che il servizio UMap erroneamente non apra il dialogo per la registrazione della mappa. Quindi si interrompe senza completare l'operazione e lo script termina dopo un lungo timeout. In questo caso basta ripetere l'operazione. Il problema si genera con frequenza, circa una volta su 10.
 
 ### Uso del tool umap-sync.py
 
