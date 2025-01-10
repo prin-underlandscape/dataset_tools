@@ -37,6 +37,7 @@ echo "<h3>Dataset QRtag</h3>"
 mk_table "QR"
 
 echo "<h3>Dataset Itinerari</h3>"
+mk_table "ITN"
 mk_table "Itinerario"
 
 

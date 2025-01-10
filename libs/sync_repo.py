@@ -214,7 +214,7 @@ def generate_readme(geojson, dataset_name):
             f.write("[<img src='qrtags/"+fid+".png' width='150'/>](qrtags/"+fid+".png) ")
             fotourl = urlparse(feature["properties"]["Foto"])
             vignette = vignetteNameFromURL(fotourl)
-            f.write("[<img src='"+vignette+"' width='250'/>]("+vignette+") \n\n")
+            f.write(f"[<img src=vignettes/{vignette} width='250'/>]("+vignette+") \n\n")
           except KeyError:
             warnprint(f"   Non è disponibile l'immagine per {feature['properties']['Titolo']} ({feature['properties']['ulsp_type']})")
             f.write("*Nessuna immagine* \n\n")

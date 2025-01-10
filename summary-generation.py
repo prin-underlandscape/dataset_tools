@@ -158,7 +158,7 @@ except NameError as e:
 # Accede alla mappa Sommario
 driver.get(config["summary_URL"])
 # Attende l'abilitazione della modifica della mappa e la seleziona
-driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-enable > button").click()
+driver.find_element(By.CSS_SELECTOR, ".edit-enable.leaflet-control > button").click()
 # Preme il bottone rotella per modificare le impostazioni della mappa
 driver.find_element(By.CSS_SELECTOR, ".update-map-settings").click()
 # Preme "Azioni avanzate"
@@ -181,9 +181,9 @@ driver.find_element(By.NAME, "submit").click()
 # Chiude il pannello di caricamento
 driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
 # Salva la nuova mappa
-driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-save").click()
+driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
 # Chiude il pannello di editing (importante: aspettando che il salvataggio termini)
-driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-disable").click()
+driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
 print("=== Concluso")
 # Attesa per consentire all'operatore di osservare il risultato
 time.sleep(10)

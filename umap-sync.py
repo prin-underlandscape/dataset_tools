@@ -64,7 +64,7 @@ def generate_umap(geojson, dataset_name):
           feature["properties"]["_umap_options"] = {"popupTemplate": "Default"}
           feature['properties']['Dataset'] = dataset_name
           feature["properties"]["GitHubURL"] = "https://github.com/prin-underlandscape/"+rn
-          feature["properties"]["GPXDownload"] = "https://raw.githubusercontent.com/prin-underlandscape/"+rn+"/main/"+rn+".gpx"
+          feature["properties"]["GPXDownload"] = "https://github.com/prin-underlandscape/"+rn+"/blob/main/"+rn+".gpx"
           if "Link" in geojson["properties"] and geojson["properties"]["Link"] != "":
 #            print(geojson["properties"]["WebPageURL"])
             feature["properties"]["Link"] = geojson["properties"]["Link"]
@@ -90,10 +90,12 @@ def generate_umap(geojson, dataset_name):
     return False
 
 def sync(umap_url):
+  print("Accedo alla mappa")
   # Accede alla mappa umap online
   driver.get(umap_url)
   # Attende l'abilitazione della modifica della mappa e la seleziona
-  driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-enable > button").click()
+  driver.find_element(By.CSS_SELECTOR, ".edit-enable.leaflet-control > button").click() 
+  print("Modifica abilitata!")
   # Preme il bottone rotella per modificare le impostazioni della mappa
   driver.find_element(By.CSS_SELECTOR, ".update-map-settings").click()
   # Preme "Azioni avanzate"
@@ -105,21 +107,25 @@ def sync(umap_url):
   # Chiude il pannello "Rotella"
   driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
   # Seleziona il tasto di caricamento "Freccia in alto"
+  print("Rimozione dei livelli completata")
   driver.find_element(By.CSS_SELECTOR, ".upload-data").click()
   # Carica i dati (ma si potrebbero anche copiare direttamente nel textbox
   # senza memorizzarlo in un file
+  time.sleep(1) # delay per lasciare che tutto vada...
   upload_file = abspath("./dataset.umap")
   file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
   file_input.send_keys(upload_file)
   # Preme pulsante di importazione
   driver.find_element(By.NAME, "submit").click()
+  print("Nuova mappa importata")
   # Chiude il pannello di caricamento
   driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
   # Salva la nuova mappa
-  driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-save").click()
+  driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
   # Chiude il pannello di editing (importante: aspettando che il salvataggio termini)
-  driver.find_element(By.CSS_SELECTOR, ".leaflet-control-edit-disable").click()
-  print("=== Concluso")
+  print("Nuova mappa salvata")
+  driver.find_element(By.CSS_SELECTOR, ".edit-disable.round").click()
+  print("=== Concluso (tra 10 secondi chiudo)")
   # Attesa per consentire all'operatore di osservare il risultato
   time.sleep(10)
   driver.get("https://umap.openstreetmap.fr/")	
