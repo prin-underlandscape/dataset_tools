@@ -23,12 +23,12 @@ Iframe con altezza e larghezza personalizzata (in px): {{{http://iframe.url.com|
 summary = {
 	"type": "umap",
 	"geometry": {
-    "type": "Point",
-    "coordinates": [
-      10.405556,
-      44.121944
-    ]
-  },
+		"type": "Point",
+		"coordinates": [
+			10.405556,
+			44.121944
+		]
+	},
 	"properties": {
     "name": "Sommario",
     "zoom": 11,
@@ -78,7 +78,7 @@ summary = {
 [[{GPXDownload}|Scarica]] il percorso in formato GPX
 ---
 Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
-Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
+Il contenuto del dataset è accessibile [[{GitHubURL}|qui]] 
 La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 --- 
 
@@ -117,8 +117,8 @@ da {Autore}
 {Descrizione}
 ---
 Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
-Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
-La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
+Il contenuto del dataset è accessibile [[{GitHubURL}|qui]] 
+La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 ---
 **Tag primario**: {Tag primario}
 **Altri tag**: {Altri tag}
@@ -148,8 +148,8 @@ da {Autore}
 **FID**: {fid}
 ---
 Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
-Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
-La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
+Il contenuto del dataset è accessibile [[{GitHubURL}|qui]] 
+La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 '''
       }
     },
@@ -197,8 +197,8 @@ La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
 [[{Bibliografia}|Link]] alla bibliografia
 ---
 Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
-Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
-La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
+Il contenuto del dataset è accessibile [[{GitHubURL}|qui]] 
+La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 '''
       }
     },
@@ -223,7 +223,7 @@ La pagina dedicata nel sito Web del progetto è [[{Link}|qui]]
 **Altri tag**: {Altri tag}"
 ---
 Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
-Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
+Il contenuto del dataset è accessibile [[{GitHubURL}|qui]] 
 La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 '''
       }
@@ -258,7 +258,7 @@ La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 **Segnaletica**: {Segnaletica}
 ---
 Questa feature di tipo **{ulsp_type}** è contenuta nel dataset *{Dataset}*
-Il contenuto del dataset è scaricabile da [[{GitHubURL}|qui]] 
+Il contenuto del dataset è accessibile [[{GitHubURL}|qui]] 
 La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 '''
       }

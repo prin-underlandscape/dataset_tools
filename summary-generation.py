@@ -7,6 +7,7 @@ import json
 import random
 import time
 import re
+from os.path import abspath
 
 from colprint import emphprint, failprint, warnprint
 
@@ -29,17 +30,62 @@ def clone(repoName):
     exit()
   return pygit2.clone_repository("https://github.com/prin-underlandscape/"+repoName,repoName)
 
-#with open("dataset-sync.config") as json_data:
-#  config = json.load(json_data)
+def sync(umap_url, umap_file):
+  print("Accedo alla mappa")
+  # Accede alla mappa umap online
+  driver.get(umap_url)
+  # Attende l'abilitazione della modifica della mappa e la seleziona
+  driver.find_element(By.CSS_SELECTOR, ".edit-enable.leaflet-control > button").click() 
+  print("Modifica abilitata!")
+  # Preme il bottone rotella per modificare le impostazioni della mappa
+  driver.find_element(By.CSS_SELECTOR, '[data-ref="settings"]').click()
+  # Preme "Azioni avanzate"
+  driver.find_element(By.CSS_SELECTOR, "details:nth-child(11) > summary").click()
+  # Preme "Vuota"
+  driver.find_element(By.CSS_SELECTOR, '[data-ref="clear"]').click()
+  # Preme "Rimuovi tutti i layer" (importante)
+  driver.find_element(By.CSS_SELECTOR, '[data-ref="empty"]').click()
+  # Chiude il pannello "Rotella"
+  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
+  # Seleziona il tasto di caricamento "Freccia in alto"
+  print("Rimozione dei livelli completata")
+  driver.find_element(By.CSS_SELECTOR, '[data-ref="import"]').click()
+  # Carica i dati (ma si potrebbero anche copiare direttamente nel textbox
+  # senza memorizzarlo in un file
+  time.sleep(1) # delay per lasciare che tutto vada...
+  upload_file = abspath(umap_file)
+  file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
+  file_input.send_keys(upload_file)
+  # Preme pulsante di importazione
+  driver.find_element(By.NAME, "submit").click()
+  print("Nuova mappa importata")
+  # Chiude il pannello di caricamento
+  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
+  # Salva la nuova mappa
+  driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
+  # Chiude il pannello di editing (importante: aspettando che il salvataggio termini)
+  print("Nuova mappa salvata")
+  driver.find_element(By.CSS_SELECTOR, ".edit-disable.round").click()
+  print("=== Concluso (tra 10 secondi chiudo)")
+  # Attesa per consentire all'operatore di osservare il risultato
+  time.sleep(10)
+  driver.get("https://umap.openstreetmap.fr/")	
+
 with open("config.json") as json_data:
   config = json.load(json_data)
   
+# Aggiunge alle descrizioni una riga per la mappa uMap (assente
+# nelle mappe uMap)
+for layer in summary["layers"]:
+	layer["_umap_options"]["popupContentTemplate"] = \
+		layer["_umap_options"]["popupContentTemplate"].\
+		replace("*{Dataset}*", "*{Dataset}*\nLa mappa relativa al dataset è [[{uMapURL}|qui]]")
+
 emphprint("Clono il repository Master da github")
 clone(config['master_repo'])
 os.chdir(config['master_repo'])
 
-ul = UploadList() 
-#generate_summary(ul)    # genera l'umap di sommario
+ul = UploadList()
 
 emphprint("Generazione della mappa umap di sommario")
 # filtra i file con estensione geojson
@@ -68,16 +114,19 @@ for fn in geojson_files:
 # acquisisce il tipo della feature
     ulspType = f['properties']['ulsp_type'] 	  
 # Imposta il nome del dataset
-    f['properties']['Dataset'] = os.path.splitext(fn)[0]
+    f['properties']['Dataset'] = datasetName
 # Imposta il link github
-    f['properties']['Link GitHub'] = 'https://github.com/prin-underlandscape/'+os.path.splitext(fn)[0]
+    f['properties']['GitHubURL'] = 'https://github.com/prin-underlandscape/' + datasetName
 # Imposta il link per il download
     f["properties"]["GPXDownload"] = "https://raw.githubusercontent.com/prin-underlandscape/"+datasetName+"/main/"+datasetName+".gpx"
     try:
 # Imposta la URL della mappa uMap
-      f['properties']['umapURL'] = geojson['properties']['umapKey']
-# Imposta la URL della pagina decicata nel sito Underlandscape
-      f['properties']['WebPageURL'] = geojson['properties']['WebPageURL']
+      f['properties']['uMapURL'] = geojson['properties']['umapKey']
+# Imposta la URL della pagina dedicata nel sito Underlandscape
+      if geojson['properties']['WebPageURL']:
+        f['properties']['ULSPLink'] = geojson['properties']['WebPageURL']
+      else:
+        f['properties']['ULSPLink'] = config['no_weburl']
     except KeyError as e:
       print(f'Error: {e}')
 # Imposta il "name" (comodità...)
@@ -130,7 +179,7 @@ for fn in geojson_files:
     except Exception as e:
       print(f'Error: {e}')
 
-with open(config["summary_filename"], 'w', encoding='utf-8') as f:  
+with open(f'../{config["summary_filename"]}', 'w', encoding='utf-8') as f:  
   json.dump(summary, f , ensure_ascii=False, indent=2)
 
 ul.log(config["summary_filename"], config["summary_URL"])
@@ -143,7 +192,7 @@ driver.implicitly_wait(60) # useful to wait for login
 # Start from login page
 driver.get("https://umap.openstreetmap.fr/it/login/")
 # Seleziona oauth2 con osm
-driver.find_element(By.CSS_SELECTOR, ".login-openstreetmap-oauth2").click()
+driver.find_element(By.CSS_SELECTOR, '[title="Openstreetmap-Oauth2"]').click()
 # Autenticazione su OSM
 try:
   driver.find_element(By.ID, "username").click()
@@ -153,40 +202,14 @@ try:
   driver.find_element(By.NAME, "commit").click()
 except NameError as e:
   print("Credenziali non definite: login manuale")
+ 
+try:
 # Attende di accedere alla dashboard	
-  driver.find_element(By.PARTIAL_LINK_TEXT, "Dashboard")
-# Accede alla mappa Sommario
-driver.get(config["summary_URL"])
-# Attende l'abilitazione della modifica della mappa e la seleziona
-driver.find_element(By.CSS_SELECTOR, ".edit-enable.leaflet-control > button").click()
-# Preme il bottone rotella per modificare le impostazioni della mappa
-driver.find_element(By.CSS_SELECTOR, ".update-map-settings").click()
-# Preme "Azioni avanzate"
-driver.find_element(By.CSS_SELECTOR, "details:nth-child(11) > summary").click()
-# Preme "Clear data"
-driver.find_element(By.CSS_SELECTOR, ".umap-empty:nth-child(2)").click()
-# Preme "Rimuovi tutti i layer" (importante)
-driver.find_element(By.CSS_SELECTOR, ".button:nth-child(3)").click()
-# Chiude il pannello "Rotella"
-driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
-# Seleziona il tasto di caricamento "Freccia in alto"
-driver.find_element(By.CSS_SELECTOR, ".upload-data").click()
-# Carica i dati (ma si potrebbero anche copiare direttamente nel textbox
-# senza memorizzarlo in un file
-upload_file = os.path.abspath(config["summary_filename"])
-file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
-file_input.send_keys(upload_file)
-# Preme pulsante di importazione
-driver.find_element(By.NAME, "submit").click()
-# Chiude il pannello di caricamento
-driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
-# Salva la nuova mappa
-driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
-# Chiude il pannello di editing (importante: aspettando che il salvataggio termini)
-driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
-print("=== Concluso")
-# Attesa per consentire all'operatore di osservare il risultato
-time.sleep(10)
-
+  driver.find_element(By.PARTIAL_LINK_TEXT, "Dashboard") # Attende di accedere alla dashboard
+  print(f"Sincronizzo la mappa sommario") 
+  sync(config["summary_URL"],f'../{config["summary_filename"]}')
+except KeyError as error:
+  print("C'è stato un problema:", error)
+    
 os.chdir('..')
 shutil.rmtree(config['master_repo'], ignore_errors=True)
