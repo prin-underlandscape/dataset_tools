@@ -1,28 +1,34 @@
+# Generates the summary umap, by collecting all the files with ".geojson"
+# extension in the Master repository, and scanning all features contained
+# therein. No arguments needed.
+# New features properties are computed to be included in the feature
+# description, like for dataset specific uMap maps. In addition, a line
+# for the link to the specific map is added to the feature description
+# in the map.
+# After generating the uMap file, the script uploads the map to uMap.
+# Since an API service is not available, the upload is implemented
+# mimiking the user operation on uMap GUI with Selenium. Since the
+# references inside the GUI change frequently, the script must be
+# likely revised in the part that uses the Selenium library (mostly in
+# the "umap_common" library).
+# Debugged, tested and used in April 2025  
 import os
 import shutil
-import sys
-sys.path.append('./libs')
 import pygit2
 import json
 import random
 import time
 import re
-from os.path import abspath
-
-from colprint import emphprint, failprint, warnprint
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.service import Service
 
+import sys
+sys.path.append('./libs')
+from colprint import emphprint, failprint, warnprint
 from upload_list import UploadList
-from umap_common import summary
-#import upload_list
+from umap_common import tag_options, dataset_template, umap_login, umap_sync
 
 def clone(repoName):
   if os.path.isdir(repoName):
@@ -30,53 +36,12 @@ def clone(repoName):
     exit()
   return pygit2.clone_repository("https://github.com/prin-underlandscape/"+repoName,repoName)
 
-def sync(umap_url, umap_file):
-  print("Accedo alla mappa")
-  # Accede alla mappa umap online
-  driver.get(umap_url)
-  # Attende l'abilitazione della modifica della mappa e la seleziona
-  driver.find_element(By.CSS_SELECTOR, ".edit-enable.leaflet-control > button").click() 
-  print("Modifica abilitata!")
-  # Preme il bottone rotella per modificare le impostazioni della mappa
-  driver.find_element(By.CSS_SELECTOR, '[data-ref="settings"]').click()
-  # Preme "Azioni avanzate"
-  driver.find_element(By.CSS_SELECTOR, "details:nth-child(11) > summary").click()
-  # Preme "Vuota"
-  driver.find_element(By.CSS_SELECTOR, '[data-ref="clear"]').click()
-  # Preme "Rimuovi tutti i layer" (importante)
-  driver.find_element(By.CSS_SELECTOR, '[data-ref="empty"]').click()
-  # Chiude il pannello "Rotella"
-  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
-  # Seleziona il tasto di caricamento "Freccia in alto"
-  print("Rimozione dei livelli completata")
-  driver.find_element(By.CSS_SELECTOR, '[data-ref="import"]').click()
-  # Carica i dati (ma si potrebbero anche copiare direttamente nel textbox
-  # senza memorizzarlo in un file
-  time.sleep(1) # delay per lasciare che tutto vada...
-  upload_file = abspath(umap_file)
-  file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
-  file_input.send_keys(upload_file)
-  # Preme pulsante di importazione
-  driver.find_element(By.NAME, "submit").click()
-  print("Nuova mappa importata")
-  # Chiude il pannello di caricamento
-  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
-  # Salva la nuova mappa
-  driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
-  # Chiude il pannello di editing (importante: aspettando che il salvataggio termini)
-  print("Nuova mappa salvata")
-  driver.find_element(By.CSS_SELECTOR, ".edit-disable.round").click()
-  print("=== Concluso (tra 10 secondi chiudo)")
-  # Attesa per consentire all'operatore di osservare il risultato
-  time.sleep(10)
-  driver.get("https://umap.openstreetmap.fr/")	
-
 with open("config.json") as json_data:
   config = json.load(json_data)
   
 # Aggiunge alle descrizioni una riga per la mappa uMap (assente
 # nelle mappe uMap)
-for layer in summary["layers"]:
+for layer in dataset_template["layers"]:
 	layer["_umap_options"]["popupContentTemplate"] = \
 		layer["_umap_options"]["popupContentTemplate"].\
 		replace("*{Dataset}*", "*{Dataset}*\nLa mappa relativa al dataset è [[{uMapURL}|qui]]")
@@ -98,8 +63,8 @@ geojson_files = list(
 for fn in geojson_files:
   datasetName = os.path.splitext(fn)[0]
 # Esclude dal sommario itinerari e test
-  if re.search("^ITN.*", datasetName): continue
-  if re.search("^Itinerario.*", datasetName): continue
+#  if re.search("^ITN.*", datasetName): continue
+#  if re.search("^Itinerario.*", datasetName): continue
   if re.search("^test.*", datasetName): continue
   emphprint("  Includo il dataset " + datasetName)
   with open(fn) as json_data:
@@ -171,7 +136,7 @@ for fn in geojson_files:
     try:
 # Seleziona il layer con il nome uguale al tipo della nuova feature
       layer=next(
-        filter(lambda l: l["_umap_options"]["name"] == ulspType, summary["layers"])
+        filter(lambda l: l["_umap_options"]["name"] == ulspType, dataset_template["layers"])
       )
 # Aggancia la nuova feature al livello
       layer["features"].append(f)
@@ -180,7 +145,7 @@ for fn in geojson_files:
       print(f'Error: {e}')
 
 with open(f'../{config["summary_filename"]}', 'w', encoding='utf-8') as f:  
-  json.dump(summary, f , ensure_ascii=False, indent=2)
+  json.dump(dataset_template, f , ensure_ascii=False, indent=2)
 
 ul.log(config["summary_filename"], config["summary_URL"])
 
@@ -189,25 +154,11 @@ chrome_service = Service(executable_path=config["webdriver"])
 driver = webdriver.Chrome(service=chrome_service)
 driver.set_window_size(1600,900)
 driver.implicitly_wait(60) # useful to wait for login
-# Start from login page
-driver.get("https://umap.openstreetmap.fr/it/login/")
-# Seleziona oauth2 con osm
-driver.find_element(By.CSS_SELECTOR, '[title="Openstreetmap-Oauth2"]').click()
-# Autenticazione su OSM
+
+umap_login(driver, config)
 try:
-  driver.find_element(By.ID, "username").click()
-  driver.find_element(By.ID, "username").send_keys(config["osm_username"])
-  driver.find_element(By.ID, "password").click()
-  driver.find_element(By.ID, "password").send_keys(config["osm_password"])
-  driver.find_element(By.NAME, "commit").click()
-except NameError as e:
-  print("Credenziali non definite: login manuale")
- 
-try:
-# Attende di accedere alla dashboard	
-  driver.find_element(By.PARTIAL_LINK_TEXT, "Dashboard") # Attende di accedere alla dashboard
-  print(f"Sincronizzo la mappa sommario") 
-  sync(config["summary_URL"],f'../{config["summary_filename"]}')
+  print(f"Sincronizzo la mappa sommario")
+  umap_sync(driver, config["summary_URL"],f'../{config["summary_filename"]}')
 except KeyError as error:
   print("C'è stato un problema:", error)
     

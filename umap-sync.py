@@ -1,26 +1,38 @@
-import sys
-sys.path.append('./libs')
-from os.path import basename, splitext, abspath
+# Takes a list of dataset names, possibly as paths to a filename, and,
+# for each of them, uploads the generated uMap to the uMap referenced
+# in the "umapKey" property in the dataset. The uMap map must already
+# exist, and the "umapKey" property must be correctly set (using Off).
+# New features properties are computed to be included in the feature
+# description, like for dataset specific uMap maps. 
+# After generating the uMap file, the script uploads the map to uMap.
+# Since an API service is not available, the upload is implemented
+# mimiking the user operation on uMap GUI with Selenium. Since the
+# references inside the GUI change frequently, the script must be
+# likely revised in the part that uses the Selenium library (mostly in
+# the "umap_common" library).
+# Debugged, tested and used in April 2025  
+
+from os.path import basename, splitext
 import time
 import json
 import math
 from copy import deepcopy
 from functools import reduce
 from urllib.request import urlretrieve, urlopen
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.common.keys import Keys
 
+import sys
+sys.path.append('./libs')
 from colprint import emphprint, failprint, warnprint
-from umap_common import tag_options, summary
+from umap_common import tag_options, dataset_template, umap_login, umap_sync
 
-def generate_umap(geojson, dataset_name):
+def generate_umap(geojson, dataset_name, umap_file):
   rn = geojson["properties"]["Nome"]
   try:
-    umap=deepcopy(summary)
+    umap=deepcopy(dataset_template)
     print("\u2022 Generazione del file umap")
     allowed_types = list(map(lambda l: l["_umap_options"]["name"], umap["layers"]))
 # compute map center        
@@ -83,57 +95,14 @@ def generate_umap(geojson, dataset_name):
       except KeyError as ke:
         failprint("   Feature mal formattata: non trattata ("+ke.args[0]+")")
         continue
-    with open('dataset.umap', 'w', encoding='utf-8') as f:
+    with open(umap_file, 'w', encoding='utf-8') as f:
       json.dump(umap, f, ensure_ascii=False, indent=2)
   except KeyError as ke:
     failprint("   GeoJSON mal formattato: non trattato ("+ke.args[0]+")")
     return False
 
-def sync(umap_url):
-  print("Accedo alla mappa")
-  # Accede alla mappa umap online
-  driver.get(umap_url)
-  # Attende l'abilitazione della modifica della mappa e la seleziona
-  driver.find_element(By.CSS_SELECTOR, ".edit-enable.leaflet-control > button").click() 
-  print("Modifica abilitata!")
-  # Preme il bottone rotella per modificare le impostazioni della mappa
-  driver.find_element(By.CSS_SELECTOR, ".update-map-settings").click()
-  # Preme "Azioni avanzate"
-  driver.find_element(By.CSS_SELECTOR, "details:nth-child(11) > summary").click()
-  # Preme "Vuota"
-  driver.find_element(By.CSS_SELECTOR, ".umap-empty:nth-child(2)").click()
-  # Preme "Rimuovi tutti i layer" (importante)
-  driver.find_element(By.CSS_SELECTOR, ".button:nth-child(3)").click()
-  # Chiude il pannello "Rotella"
-  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
-  # Seleziona il tasto di caricamento "Freccia in alto"
-  print("Rimozione dei livelli completata")
-  driver.find_element(By.CSS_SELECTOR, ".upload-data").click()
-  # Carica i dati (ma si potrebbero anche copiare direttamente nel textbox
-  # senza memorizzarlo in un file
-  time.sleep(1) # delay per lasciare che tutto vada...
-  upload_file = abspath("./dataset.umap")
-  file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
-  file_input.send_keys(upload_file)
-  # Preme pulsante di importazione
-  driver.find_element(By.NAME, "submit").click()
-  print("Nuova mappa importata")
-  # Chiude il pannello di caricamento
-  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
-  # Salva la nuova mappa
-  driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
-  # Chiude il pannello di editing (importante: aspettando che il salvataggio termini)
-  print("Nuova mappa salvata")
-  driver.find_element(By.CSS_SELECTOR, ".edit-disable.round").click()
-  print("=== Concluso (tra 10 secondi chiudo)")
-  # Attesa per consentire all'operatore di osservare il risultato
-  time.sleep(10)
-  driver.get("https://umap.openstreetmap.fr/")	
-
 if len(sys.argv) < 2:
   exit("Bisogna passare i dataset da sincronizzare")
-
-print("Ecco")
 
 # Caricamento del file di configurazione
 with open("config.json") as json_data:
@@ -144,22 +113,10 @@ chrome_service = Service(executable_path=config["webdriver"])
 driver = webdriver.Chrome(service=chrome_service)
 driver.set_window_size(1600,900)
 driver.implicitly_wait(60) # useful to wait for login
-# Start from login page
-driver.get("https://umap.openstreetmap.fr/it/login/")
-# Seleziona oauth2 con osm
-driver.find_element(By.CSS_SELECTOR, ".login-openstreetmap-oauth2").click()
-# Autenticazione su OSM
-try:
-  driver.find_element(By.ID, "username").click()
-  driver.find_element(By.ID, "username").send_keys(config["osm_username"])
-  driver.find_element(By.ID, "password").click()
-  driver.find_element(By.ID, "password").send_keys(config["osm_password"])
-  driver.find_element(By.NAME, "commit").click()
-except NameError as e:
-  print("Credenziali non definite: login manuale")
-  # Attende di accedere alla dashboard	
-  driver.find_element(By.PARTIAL_LINK_TEXT, "Dashboard")
 
+
+umap_file='./dataset.umap'
+umap_login(driver, config)
 # Enumera gli argomenti e aggiorna
 for fn in sys.argv[1:]:
   try:
@@ -170,8 +127,8 @@ for fn in sys.argv[1:]:
   # Download dataset geojsos and extract URL of umap map
     with urlopen(f"https://raw.githubusercontent.com/prin-underlandscape/Master/main/{dataset_name}.geojson") as content:
       geojson = json.load(content)
-    generate_umap(geojson, dataset_name)
-    sync(geojson["properties"]["umapKey"])
+    generate_umap(geojson, dataset_name, umap_file)
+    umap_sync(driver, geojson["properties"]["umapKey"], umap_file)
   except KeyError as error:
     print("C'è stato un problema:", error)
 	 

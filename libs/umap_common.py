@@ -1,3 +1,12 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.keys import Keys
+import time
+from os.path import abspath
+
 
 """
 Aiuto dalla GUI di umap
@@ -19,8 +28,9 @@ Iframe con altezza e larghezza personalizzata (in px): {{{http://iframe.url.com|
 --- per una linea orizzontale
 """
 
-# Inizializzazione umap mappa Summary 
-summary = {
+# Il template per il dataset: contiene le proprietà del dataset e i
+# layer per i diversi ulsp_types 
+dataset_template = {
 	"type": "umap",
 	"geometry": {
 		"type": "Point",
@@ -218,7 +228,7 @@ La pagina dedicata nel sito Web del progetto è [[{ULSPLink}|qui]]
 {{{Foto}|300}}
 {Descrizione}
 **Altitudine** (m): {Altitudine}
-**Pagina Web**: [[{Link}|link]]
+**Pagina Web**: [[{ULSPLink}|link]]
 **Tag primario**: {Tag primario}
 **Altri tag**: {Altri tag}"
 ---
@@ -281,3 +291,69 @@ tag_options = {
  "Monumento": { "color": "MediumBlue", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/monument.svg"},
  "Museo": { "color": "MediumBlue", "iconClass": "Drop", "iconUrl": "/uploads/pictogram/museum.svg"}
 }
+
+# Login using user credentials in the config file (alternative manual
+# login questionable...)
+def umap_login(driver, config):
+  # Start from login page
+  driver.get("https://umap.openstreetmap.fr/it/login/")
+  # Seleziona oauth2 con osm
+  driver.find_element(By.CSS_SELECTOR, '[title="Openstreetmap-Oauth2"]').click()
+  # Autenticazione su OSM
+  try:
+    driver.find_element(By.ID, "username").click()
+    driver.find_element(By.ID, "username").send_keys(config["osm_username"])
+    driver.find_element(By.ID, "password").click()
+    driver.find_element(By.ID, "password").send_keys(config["osm_password"])
+    driver.find_element(By.NAME, "commit").click()
+  except NameError as e:
+    print("Credenziali non definite: login manuale")
+  # Attende di accedere alla dashboard	
+  driver.find_element(By.PARTIAL_LINK_TEXT, "Dashboard") # Attende di accedere alla dashboard
+
+# Uploads the content of "umap_file" to the map at "umap_url" using the
+# Selenium driver "driver". Depends on uMap web pages organization,
+# which is unstable. Use Shift-Ctrl-I in the browser to update the
+# elements references.
+# After upload waits 10s to allow a fast check
+def umap_sync(driver, umap_url, umap_file):
+  print("Accedo alla mappa")
+  # Accede alla mappa umap online
+  driver.get(umap_url)
+  # Attende l'abilitazione della modifica della mappa e la seleziona
+  driver.find_element(By.CSS_SELECTOR, ".edit-enable.leaflet-control > button").click() 
+  print("Modifica abilitata!")
+  # Preme il bottone "Rotella" per modificare le impostazioni della mappa
+  driver.find_element(By.CSS_SELECTOR, '[data-ref="settings"]').click()
+  # Preme "Azioni avanzate"
+  driver.find_element(By.CSS_SELECTOR, "details:nth-child(11) > summary").click()
+  # Preme "Vuota"
+  driver.find_element(By.CSS_SELECTOR, '[data-ref="clear"]').click()
+  # Preme "Rimuovi tutti i layer" (importante)
+  driver.find_element(By.CSS_SELECTOR, '[data-ref="empty"]').click()
+  # Chiude il pannello "Rotella"
+  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
+  # Seleziona il tasto di caricamento "Freccia in alto"
+  print("Rimozione dei livelli completata")
+  driver.find_element(By.CSS_SELECTOR, '[data-ref="import"]').click()
+  # Carica i dati (ma forse si potrebbero anche copiare direttamente
+  # nel textbox senza memorizzarlo in un file
+  time.sleep(1) # delay per lasciare che tutto vada...
+  upload_file = abspath(umap_file)
+  file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
+  file_input.send_keys(upload_file)
+  # Preme pulsante di importazione
+  driver.find_element(By.NAME, "submit").click()
+  print("Nuova mappa importata")
+  # Chiude il pannello di caricamento
+  driver.find_element(By.CSS_SELECTOR, ".buttons:nth-child(1) .icon-close").click()
+  # Salva la nuova mappa
+  driver.find_element(By.CSS_SELECTOR, ".edit-save.button.round").click()
+  # Chiude il pannello di editing (importante: aspettando che il salvataggio termini)
+  print("Nuova mappa salvata")
+  driver.find_element(By.CSS_SELECTOR, ".edit-disable.round").click()
+  print("=== Concluso (tra 10 secondi chiudo)")
+  # Attesa per consentire all'operatore di osservare il risultato
+  time.sleep(10)
+  driver.get("https://umap.openstreetmap.fr/")	
+
